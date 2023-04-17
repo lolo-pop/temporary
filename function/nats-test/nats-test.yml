@@ -1,0 +1,13 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  nats-test:
+    lang: python3-debian
+    handler: ./nats-test
+    image: lolopop/nats-test:latest
+    environment:
+      NATS_ADDRESS: "nats://10.244.0.35:4222"
+      NATS_SUBJECT: "image"
+

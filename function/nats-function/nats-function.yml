@@ -1,0 +1,13 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  nats-function:
+    lang: python3
+    handler: ./nats-function
+    image: lolopop/nats-function:latest
+    environment:
+      NATS_URL: "http://10.244.0.35:4222"
+      NATS_SUBJECT: "image"
+

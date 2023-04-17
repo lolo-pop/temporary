@@ -1,0 +1,15 @@
+curators:
+ - alexellis
+ - LucasRoesler
+ - viveksyngh
+ - nitishkumar71
+ - rgee0
+ - welteki
+
+features:
+ - dco_check
+ - comments
+ - pr_description_required
+ - release_notes
+
+contributing_url: https://github.com/openfaas/faas/blob/master/CONTRIBUTING.md

@@ -1,0 +1,9 @@
+go 1.20
+
+use (
+	./faas
+	./faas-idler
+	./faas-monitor
+	./faas-netes
+	./faas-scaling
+)
