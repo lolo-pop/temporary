@@ -1,6 +1,6 @@
 package metrics
 
-import "github.com/lolo-pop/faas-scaling/pkg/types"
+import "github.com/lolo-pop/faas-dispatch/pkg/types"
 
 type Provider interface {
 

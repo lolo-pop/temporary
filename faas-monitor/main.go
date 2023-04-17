@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/smvfal/faas-monitor/pkg/metrics"
-	"github.com/smvfal/faas-monitor/pkg/nats"
-	"github.com/smvfal/faas-monitor/pkg/types"
+	"github.com/lolo-pop/faas-monitor/pkg/metrics"
+	"github.com/lolo-pop/faas-monitor/pkg/nats"
+	"github.com/lolo-pop/faas-monitor/pkg/types"
 )
 
 var scrapePeriod int64

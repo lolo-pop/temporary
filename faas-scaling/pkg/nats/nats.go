@@ -1,10 +1,13 @@
 package nats
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/lolo-pop/faas-scaling/pkg/types"
 	"github.com/nats-io/nats.go"
 )
 
@@ -46,6 +49,30 @@ func Publish(msg []byte) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
+
+func Subscribe() types.Message {
+	nc, err := nats.Connect(natsUrl)
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err)
+		log.Fatal(errMsg)
+	}
+	defer nc.Close()
+	sub, err := nc.SubscribeSync(metricsSubject)
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot subscribe %s subject: %s", metricsSubject, err)
+		log.Fatal(errMsg)
+	}
+	msg, err := sub.NextMsg(time.Second)
+	var metrics types.Message
+	err = json.Unmarshal(msg.Data, &metrics)
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err)
+		log.Fatal(errMsg)
+	}
+
+	fmt.Printf("Timestamp: %d", metrics.Timestamp)
+	return metrics
 }
 
 /*

@@ -1,4 +1,4 @@
-module github.com/smvfal/faas-monitor
+module github.com/lolo-pop/faas-monitor
 
 go 1.15
 

@@ -1,11 +1,11 @@
 package metrics
 
 import (
-	"github.com/smvfal/faas-monitor/pkg/metrics/apiserver"
-	"github.com/smvfal/faas-monitor/pkg/metrics/gateway"
-	"github.com/smvfal/faas-monitor/pkg/metrics/metricsserver"
-	"github.com/smvfal/faas-monitor/pkg/metrics/prometheus"
-	"github.com/smvfal/faas-monitor/pkg/types"
+	"github.com/lolo-pop/faas-monitor/pkg/metrics/apiserver"
+	"github.com/lolo-pop/faas-monitor/pkg/metrics/gateway"
+	"github.com/lolo-pop/faas-monitor/pkg/metrics/metricsserver"
+	"github.com/lolo-pop/faas-monitor/pkg/metrics/prometheus"
+	"github.com/lolo-pop/faas-monitor/pkg/types"
 )
 
 type FaasProvider struct{}

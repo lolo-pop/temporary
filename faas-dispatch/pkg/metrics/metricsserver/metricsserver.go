@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/lolo-pop/faas-scaling/pkg/types"
+	"github.com/lolo-pop/faas-dispatch/pkg/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

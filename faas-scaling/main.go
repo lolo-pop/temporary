@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/lolo-pop/faas-scaling/pkg/metrics"
+	"github.com/lolo-pop/faas-scaling/pkg/nats"
 	"github.com/lolo-pop/faas-scaling/pkg/scaling"
+	"github.com/lolo-pop/faas-scaling/pkg/types"
 )
 
 var scalingWindows int64
@@ -27,16 +29,30 @@ func init() {
 	scalingWindows = int64(val)
 }
 
+func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName string) float32 {
+	for _, functionPair := range sortedFunctionAccuracyMap {
+		if functionPair.Key == functionName {
+			return functionPair.Value
+		}
+	}
+	log.Fatalf("Cannot get %s function's accuracy requirement", functionName)
+	return 0
+}
+
 func main() {
 
 	var p metrics.Provider
 	p = &metrics.FaasProvider{}
 	scaling.Hello("test")
 	rand.Seed(time.Now().UnixNano())
-	var accuracy [10]float32
-	for i := 0; i < 10; i++ {
-		accuracy[i] = rand.Float32()
-	}
+	// var accuracy [20]float32
+	// for i := 0; i < 10; i++ {
+	// 	accuracy[i] = rand.Float32()
+	// }
+	accuracy := [20]float32{0.667, 0.901, 0.676, 0.663, 0.822,
+		0.776, 0.720, 0.851, 0.852, 0.662,
+		0.759, 0.839, 0.612, 0.801, 0.790,
+		0.668, 0.654, 0.760, 0.690, 0.853}
 	functionAccuracy := make(map[string]float32)
 	index := 0
 	// accuracy 和function name的对应关系需要确定是否是固定的。
@@ -63,12 +79,21 @@ func main() {
 		for _, funcAccPair := range sortedFunctionAccuracyMap {
 			fmt.Println(funcAccPair)
 		}
-		// debug here
-		// for _, fname := range functionNames {
 
+		var metrics types.Message
+		metrics = nats.Subscribe()
+		for _, function := range metrics.Functions {
+			functionName := function.Name
+			functionThroughput := function.Throughput
+			functionAccRequire := getFunctionAccRequire(sortedFunctionAccuracyMap, functionName)
+		}
 		batchTimeout := scaling.CalculateTimeout()
 
 		scaling.Handle(batchTimeout)
+
+		for _, funcAccPair := range sortedFunctionAccuracyMap {
+
+		}
 		/*
 			for _, funcAccPair := range sortedFunctionAccuracyMap {
 				fname := funcAccPair.Key

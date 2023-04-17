@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lolo-pop/faas-scaling/pkg/metrics"
-	"github.com/lolo-pop/faas-scaling/pkg/scaling"
+	"github.com/lolo-pop/faas-dispatch/pkg/metrics"
+	"github.com/lolo-pop/faas-dispatch/pkg/scaling"
 )
 
 var scalingWindows int64

@@ -1,11 +1,11 @@
 package metrics
 
 import (
-	"github.com/lolo-pop/faas-scaling/pkg/metrics/apiserver"
-	"github.com/lolo-pop/faas-scaling/pkg/metrics/gateway"
-	"github.com/lolo-pop/faas-scaling/pkg/metrics/metricsserver"
-	"github.com/lolo-pop/faas-scaling/pkg/metrics/prometheus"
-	"github.com/lolo-pop/faas-scaling/pkg/types"
+	"github.com/lolo-pop/faas-dispatch/pkg/metrics/apiserver"
+	"github.com/lolo-pop/faas-dispatch/pkg/metrics/gateway"
+	"github.com/lolo-pop/faas-dispatch/pkg/metrics/metricsserver"
+	"github.com/lolo-pop/faas-dispatch/pkg/metrics/prometheus"
+	"github.com/lolo-pop/faas-dispatch/pkg/types"
 )
 
 type FaasProvider struct{}

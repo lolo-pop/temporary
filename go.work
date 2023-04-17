@@ -6,4 +6,5 @@ use (
 	./faas-monitor
 	./faas-netes
 	./faas-scaling
+	./faas-dispatch
 )

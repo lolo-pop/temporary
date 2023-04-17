@@ -1,6 +1,6 @@
 package metrics
 
-import "github.com/smvfal/faas-monitor/pkg/types"
+import "github.com/lolo-pop/faas-monitor/pkg/types"
 
 type Provider interface {
 

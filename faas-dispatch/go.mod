@@ -1,4 +1,4 @@
-module github.com/lolo-pop/faas-scaling
+module github.com/lolo-pop/faas-dispatch
 
 go 1.15
 

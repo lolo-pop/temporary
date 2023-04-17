@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/lolo-pop/faas-scaling/pkg/util"
+	"github.com/lolo-pop/faas-dispatch/pkg/util"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )

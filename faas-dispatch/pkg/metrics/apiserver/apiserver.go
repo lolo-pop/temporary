@@ -8,7 +8,7 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/lolo-pop/faas-scaling/pkg/util"
+	"github.com/lolo-pop/faas-dispatch/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
