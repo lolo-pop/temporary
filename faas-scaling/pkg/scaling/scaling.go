@@ -63,7 +63,7 @@ const (
 	batchTimeout = 500 * time.Millisecond
 )
 
-func Handle() {
+func Handle(batchTime int) {
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
 		panic(err)
@@ -118,6 +118,6 @@ func sendBatch(nc *nats.Conn, msgs []*nats.Msg) {
 	fmt.Println("Sending batch:", msgs)
 	// send batch of messages here
 }
-func CalculateTimeout() {
-
+func CalculateTimeout() int {
+	return 500
 }

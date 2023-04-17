@@ -57,7 +57,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		// 对偶
+
 		var sortedFunctionAccuracyMap []scaling.Kv
 		sortedFunctionAccuracyMap = scaling.FunctionAccuracyMapSort(functionAccuracy)
 		for _, funcAccPair := range sortedFunctionAccuracyMap {
@@ -65,9 +65,10 @@ func main() {
 		}
 		// debug here
 		// for _, fname := range functionNames {
-		var timeout int
-		timeout = scaling.CalculateTimeout()
-		scaling.Handle()
+
+		batchTimeout := scaling.CalculateTimeout()
+
+		scaling.Handle(batchTimeout)
 		/*
 			for _, funcAccPair := range sortedFunctionAccuracyMap {
 				fname := funcAccPair.Key

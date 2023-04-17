@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: openfaas 
+  name: faas-scaling
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: openfaas
+  name: secret-pod-reader
+rules:
+ - apiGroups: ["metrics.k8s.io"]
+   resources: ["pods", "nodes"]
+   verbs: ["get", "watch", "list"]
+ - apiGroups: [""] # "" indicates the core API group
+   resources: ["secrets", "pods", "nodes", "pods/log"]
+   verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: faas-clusterbinding
+subjects:
+- kind: ServiceAccount
+  name: faas-scaling
+  namespace: openfaas 
+roleRef:
+  kind: ClusterRole
+  name: secret-pod-reader
+  apiGroup: rbac.authorization.k8s.io
