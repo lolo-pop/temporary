@@ -14,6 +14,12 @@ type Kv struct {
 	Key   string
 	Value float32
 }
+type PreThroughput struct {
+	ThroughputQueue1 Queue
+	ThroughputQueue2 Queue
+	ThroughputQueue3 Queue
+	ThroughputQueue4 Queue
+}
 
 var (
 	natsUrl        string

@@ -1,4 +1,4 @@
-package main
+package scaling
 
 import (
 	"fmt"
@@ -44,14 +44,4 @@ func (q *Queue) isFull() bool {
 
 func (q *Queue) isEmpty() bool {
 	return q.rear < q.front
-}
-
-func main() {
-	l := make([]int, 4)
-	l[0] = 2
-	l = append(l, 2)
-	l = append(l, 3)
-	for i := 0; i < 4; i++ {
-		fmt.Println(l[i])
-	} // Output:
 }

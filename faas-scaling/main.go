@@ -82,10 +82,15 @@ func main() {
 
 		var metrics types.Message
 		metrics = nats.Subscribe()
+		batchSize := 4 // 后续可能需要设置成非固定的batch size
+		curThroughput := make([]int, 10)
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 			functionThroughput := function.Throughput
 			functionAccRequire := getFunctionAccRequire(sortedFunctionAccuracyMap, functionName)
+
+			// 根据非service container的历史吞吐量 预测当前time windows的吞吐量
+
 		}
 		batchTimeout := scaling.CalculateTimeout()
 
