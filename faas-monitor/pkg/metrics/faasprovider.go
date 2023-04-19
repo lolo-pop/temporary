@@ -18,8 +18,8 @@ func (*FaasProvider) FunctionReplicas(functionName string) (int, error) {
 	return prometheus.FunctionReplicas(functionName)
 }
 
-func (*FaasProvider) FunctionInvocationRate(functionName string, sinceSeconds int64) (float64, error) {
-	return prometheus.FunctionInvocationRate(functionName, sinceSeconds)
+func (*FaasProvider) FunctionInvocationCounter(functionName string, sinceSeconds int64) (float64, error) {
+	return prometheus.FunctionInvocationCounter(functionName, sinceSeconds)
 }
 
 func (*FaasProvider) ResponseTime(functionName string, sinceSeconds int64) (float64, error) {

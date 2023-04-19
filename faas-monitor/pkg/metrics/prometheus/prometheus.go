@@ -27,7 +27,7 @@ func (e *IdleError) Error() string {
 }
 
 func init() {
-	prometheusUrl, ok := os.LookupEnv("PrometheusURL")
+	prometheusUrl, ok := os.LookupEnv("PROMETHEUS_URL")
 	if !ok {
 		log.Fatal("$PrometheusURL not set")
 	}
@@ -69,7 +69,7 @@ func FunctionReplicas(functionName string) (int, error) {
 	return int(replicas), err
 }
 
-func FunctionInvocationRate(functionName string, sinceSeconds int64) (float64, error) {
+func FunctionInvocationCounter(functionName string, sinceSeconds int64) (float64, error) {
 
 	q := fmt.Sprintf(`sum by (function_name)`+
 		`(rate(gateway_function_invocation_total{function_name="%s.openfaas-fn"}[%ds]) > 0)`,

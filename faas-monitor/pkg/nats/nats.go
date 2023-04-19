@@ -2,9 +2,10 @@ package nats
 
 import (
 	"fmt"
-	"github.com/nats-io/nats.go"
 	"log"
 	"os"
+
+	"github.com/nats-io/nats.go"
 )
 
 var (

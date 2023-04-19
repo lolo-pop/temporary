@@ -126,7 +126,7 @@ func TestThroughput(t *testing.T) {
 func TestFunctionInvocationRate(t *testing.T) {
 	name := "nodeinfo"
 	sinceSeconds := int64(600)
-	got, err := FunctionInvocationRate(name, sinceSeconds)
+	got, err := FunctionInvocationCounter(name, sinceSeconds)
 	minRate := 1.0 / float64(sinceSeconds)
 	if err != nil {
 		t.Errorf("Error occurred: %v\n", err)

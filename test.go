@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type Queue struct {
@@ -47,11 +48,6 @@ func (q *Queue) isEmpty() bool {
 }
 
 func main() {
-	l := make([]int, 4)
-	l[0] = 2
-	l = append(l, 2)
-	l = append(l, 3)
-	for i := 0; i < 4; i++ {
-		fmt.Println(l[i])
-	} // Output:
+	str := "1"
+	fmt.Println(strconv.Atoi(str))
 }

@@ -14,12 +14,6 @@ type Kv struct {
 	Key   string
 	Value float32
 }
-type PreThroughput struct {
-	ThroughputQueue1 Queue
-	ThroughputQueue2 Queue
-	ThroughputQueue3 Queue
-	ThroughputQueue4 Queue
-}
 
 var (
 	natsUrl        string
@@ -124,6 +118,27 @@ func sendBatch(nc *nats.Conn, msgs []*nats.Msg) {
 	fmt.Println("Sending batch:", msgs)
 	// send batch of messages here
 }
+
+// 需要具体的实现
 func CalculateTimeout() int {
 	return 500
+}
+
+func PredictInvocationNum(preInvocationNum []int) (int, bool) {
+	ok := false
+	return 500, ok
+}
+
+func PredictSCReplicas(predictNum int, level int, batchSize int) (int, bool) {
+	ok := false
+	return 500, ok
+}
+
+func WarmSCReplicas(replicaNum int, level int) bool {
+	ok := true
+	return ok
+}
+func RemoveSCReplicas(replicaNum int, level int) bool {
+	ok := true
+	return ok
 }

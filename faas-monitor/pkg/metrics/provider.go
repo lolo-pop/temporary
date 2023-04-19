@@ -11,7 +11,7 @@ type Provider interface {
 	FunctionReplicas(functionName string) (int, error)
 
 	// FunctionInvocationRate provides the function invocation rate
-	FunctionInvocationRate(functionName string, sinceSeconds int64) (float64, error)
+	FunctionInvocationCounter(functionName string, sinceSeconds int64) (float64, error)
 
 	// ResponseTime provides function's average response time
 	ResponseTime(functionName string, sinceSeconds int64) (float64, error)

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lolo-pop/faas-scaling/pkg/metrics"
@@ -27,6 +28,7 @@ func init() {
 		log.Fatal(err.Error())
 	}
 	scalingWindows = int64(val)
+
 }
 
 func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName string) float32 {
@@ -83,15 +85,59 @@ func main() {
 		var metrics types.Message
 		metrics = nats.Subscribe()
 		batchSize := 4 // 后续可能需要设置成非固定的batch size
-		curThroughput := make([]int, 10)
+		var preInvocationNum [4][]int // 不同准确度等级的service container 历史request 数据量
+		var curSCReplicasNum [4]int  // 当前系统中不同准确度等级的service container的副本数
+		var lastInvocationNum [4]int // 上一次时间窗口，不同准确度等级的 service container的历史request数据量
 		for _, function := range metrics.Functions {
 			functionName := function.Name
-			functionThroughput := function.Throughput
-			functionAccRequire := getFunctionAccRequire(sortedFunctionAccuracyMap, functionName)
+			// 区分 service container和App container
+			if strings.Contains(functionName, "service") {
+				fields := strings.Split(functionName, "-")
+				accuracyLevel, err := strconv.Atoi(fields[1])
+				if err != nil {
+					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
+				curSCReplicasNum[accuracyLevel] = function.Replicas
+			} else {
+				functionAccRequire := getFunctionAccRequire(sortedFunctionAccuracyMap, functionName)
+				accuracyLevel := int((functionAccRequire - 0.65) / 0.1) // 计算准确度level 
+				functionInvocationRate := function.InvocationRate
+				functionInvocationNum := int(functionInvocationRate / 0.04) //这里后续需要确定是0.04 还是 乘以timewindows
 
-			// 根据非service container的历史吞吐量 预测当前time windows的吞吐量
-
+				// preInvocationNum[accuracyLevel] = append(preInvocationNum[accuracyLevel], functionInvocationNum)
+				lastInvocationNum[accuracyLevel] += functionInvocationNum
+				// 根据非service container的历史吞吐量 预测当前time windows的吞吐量
+				// counter +=
+			}
 		}
+		for level, invocationNum := range lastInvocationNum {
+			preInvocationNum[level] = append(preInvocationNum[level], invocationNum)
+		}
+
+		for level, invocationNumSlice := range preInvocationNum {
+			// level 表示准确度的等级
+			// PredictInvocationNum 根据历史调用次数，预测下一个窗口调用次数
+			// PredictSCReplicas 根据预测值计算预测service container的副本数
+			predictNum, ok := scaling.PredictInvocationNum(invocationNumSlice)
+			if !ok {
+				log.Fatalf("Predict the number of service-%d requests failed", level)
+			}
+			predictSCReplicasNum, ok := scaling.PredictSCReplicas(predictNum, level, batchSize)
+			if !ok {
+				log.Fatalf("Predict the number of service-%d replicas failed", level)
+			}
+			if predictSCReplicasNum > curSCReplicasNum[level] { // 如果预测的副本数量大于当前的SC副本数量，则warm, 否则 label remove 
+				ok := scaling.WarmSCReplicas(predictSCReplicasNum-curSCReplicasNum[level], level)
+				if !ok {
+					log.Fatalf("Warming up service-%d replicas failed: %d", level, predictSCReplicasNum-curSCReplicasNum[level])
+				}
+			} else {
+				ok := scaling.RemoveSCReplicas(curSCReplicasNum[level]-predictSCReplicasNum, level)
+				if !ok {
+					log.Fatalf("Warming up service-%d replicas failed: %d", level, predictSCReplicasNum-curSCReplicasNum[level])
+				}
+			}
+		}
+
 		batchTimeout := scaling.CalculateTimeout()
 
 		scaling.Handle(batchTimeout)

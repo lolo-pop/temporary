@@ -1,7 +1,7 @@
 FROM golang:1.15-alpine AS builder
 WORKDIR /go/src/github.com/smvfal/faas-monitor
 COPY . .
-RUN go build -o faas-monitor -mod=mod
+RUN GOPROXY=https://goproxy.cn,direct go build -o faas-monitor -mod=mod
 
 FROM alpine
 WORKDIR /root/

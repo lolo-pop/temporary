@@ -53,7 +53,7 @@ func main() {
 			}
 			log.Printf("%s replicas: %d\n", f.Name, f.Replicas)
 
-			f.InvocationRate, err = p.FunctionInvocationRate(f.Name, scrapePeriod)
+			f.InvocationRate, err = p.FunctionInvocationCounter(f.Name, scrapePeriod)
 			if err != nil {
 				log.Printf("WARNING: %s", err.Error())
 			}
