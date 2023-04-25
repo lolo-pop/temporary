@@ -31,7 +31,6 @@ func init() {
 	if !ok {
 		log.Fatal("$REQ_SUBJECT not set")
 	}
-
 }
 
 func Publish(msg []byte) {
@@ -63,6 +62,7 @@ func Subscribe() types.Message {
 		errMsg := fmt.Sprintf("Cannot subscribe %s subject: %s", metricsSubject, err)
 		log.Fatal(errMsg)
 	}
+	defer sub.Unsubscribe()
 	msg, err := sub.NextMsg(time.Second)
 	var metrics types.Message
 	err = json.Unmarshal(msg.Data, &metrics)

@@ -19,7 +19,7 @@ spec:
       containers:
       - name: faas-monitor
         image: lolopop/faas-monitor:latest
-        # imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: SCRAPE_PERIOD
             value: "30"

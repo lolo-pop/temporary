@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/lolo-pop/faas-monitor/pkg/util"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
-	"github.com/smvfal/faas-monitor/pkg/util"
 )
 
 var v1api v1.API
@@ -106,15 +106,16 @@ func ProcessingTime(functionName string, sinceSeconds int64) (float64, error) {
 
 	q := fmt.Sprintf(
 		`sum by (faas_function)`+
-			`(rate(http_request_duration_seconds_sum{faas_function="%s",code="200"}[%ds])>0)`+
+			`(rate(http_request_duration_seconds_sum{faas_function="%s.openfaas-fn",code="200"}[%ds])>0)`+
 			`/`+
 			`sum by (faas_function)`+
-			`(rate(http_request_duration_seconds_count{faas_function="%s",code="200"}[%ds])>0)`,
+			`(rate(http_request_duration_seconds_count{faas_function="%s.openfaas-fn",code="200"}[%ds])>0)`,
 		functionName, sinceSeconds, functionName, sinceSeconds,
 	)
 
 	pt, err := querySince(q, functionName, sinceSeconds)
 	if err != nil {
+		log.Printf("debug 1")
 		return 0, err
 	}
 
@@ -141,6 +142,7 @@ func querySince(q, functionName string, sinceSeconds int64) (float64, error) {
 
 	if len(functionName) == 0 {
 		msg := "empty function name"
+		log.Printf("debug 2")
 		return 0, errors.New(msg)
 	}
 
@@ -148,9 +150,9 @@ func querySince(q, functionName string, sinceSeconds int64) (float64, error) {
 	if len(stringResult) == 0 {
 		return 0, &IdleError{Function: functionName, Period: sinceSeconds}
 	}
-
 	value, err := util.ExtractValueBetween(stringResult, `=> `, ` @`)
 	if err != nil {
+		log.Printf("debug 3")
 		return 0, err
 	}
 
@@ -164,6 +166,7 @@ func query(q string) (string, error) {
 
 	result, warnings, err := v1api.Query(ctx, q, time.Now())
 	if err != nil {
+		fmt.Printf("debug 2")
 		return "", err
 	}
 	if len(warnings) > 0 {

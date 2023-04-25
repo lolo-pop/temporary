@@ -8,16 +8,39 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"encoding/json"
 
+	"github.com/nats-io/nats.go"
 	"github.com/lolo-pop/faas-scaling/pkg/metrics"
 	"github.com/lolo-pop/faas-scaling/pkg/nats"
 	"github.com/lolo-pop/faas-scaling/pkg/scaling"
 	"github.com/lolo-pop/faas-scaling/pkg/types"
 )
 
-var scalingWindows int64
+
+
+
+var (
+	natsUrl        string
+	metricsSubject string
+	reqSubject     string
+	scalingWindows int64
+)
 
 func init() {
+	var ok bool
+	natsUrl, ok = os.LookupEnv("NATS_URL")
+	if !ok {
+		log.Fatal("$NATS_URL not set")
+	}
+	metricsSubject, ok = os.LookupEnv("METRICS_SUBJECT")
+	if !ok {
+		log.Fatal("$METRICS_SUBJECT not set")
+	}
+	reqSubject, ok = os.LookupEnv("REQ_SUBJECT")
+	if !ok {
+		log.Fatal("$REQ_SUBJECT not set")
+	}
 	env, ok := os.LookupEnv("SCALING_WINDOWS")
 	if !ok {
 		log.Fatal("$scaling windows not set")
@@ -28,8 +51,8 @@ func init() {
 		log.Fatal(err.Error())
 	}
 	scalingWindows = int64(val)
-
 }
+
 
 func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName string) float32 {
 	for _, functionPair := range sortedFunctionAccuracyMap {
@@ -57,25 +80,45 @@ func main() {
 		0.668, 0.654, 0.760, 0.690, 0.853}
 	functionAccuracy := make(map[string]float32)
 	index := 0
+	
+	
+	// 连接NATS并订阅metrics subject
+	nc, err := nats.Connect(natsUrl)
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err)
+		log.Fatal(errMsg)
+	}
+	defer nc.Close()
+	sub, err := nc.SubscribeSync(metricsSubject)
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot subscribe %s subject: %s", metricsSubject, err)
+		log.Fatal(errMsg)
+	}
+	defer sub.Unsubscribe()
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
 
 		// var functions []types.Function
 		// var nodes []types.Node
+		msg, err := sub.NextMsg(0)
+
 
 		functionNames, err := p.Functions()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		// fmt.Println(functionNames)
 		for _, fname := range functionNames {
-			if _, ok := functionAccuracy[fname]; !ok {
+			if strings.Contains(fname, "service") {
+				continue
+			} else if _, ok := functionAccuracy[fname]; !ok {
 				functionAccuracy[fname] = accuracy[index]
 				index += 1
 			}
 		}
 		fmt.Println("current function-accuracy configration:", functionAccuracy)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
+	
+		// 对所有非service container 按照准确度要求进行排序
 		var sortedFunctionAccuracyMap []scaling.Kv
 		sortedFunctionAccuracyMap = scaling.FunctionAccuracyMapSort(functionAccuracy)
 		for _, funcAccPair := range sortedFunctionAccuracyMap {
@@ -83,7 +126,14 @@ func main() {
 		}
 
 		var metrics types.Message
-		metrics = nats.Subscribe()
+		err = json.Unmarshal(msg.Data, &metrics)
+		if err != nil {
+			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err)
+			log.Fatal(errMsg)
+		}
+	
+		fmt.Printf("Timestamp: %d", metrics.Timestamp)
+
 		batchSize := 4 // 后续可能需要设置成非固定的batch size
 		var preInvocationNum [4][]int // 不同准确度等级的service container 历史request 数据量
 		var curSCReplicasNum [4]int  // 当前系统中不同准确度等级的service container的副本数

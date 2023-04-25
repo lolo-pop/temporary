@@ -8,6 +8,5 @@ functions:
     handler: ./nats-test
     image: lolopop/nats-test:latest
     environment:
-      NATS_ADDRESS: "nats://10.244.0.35:4222"
-      NATS_SUBJECT: "image"
-
+      BATCH_SIZE: "4"
+      RESOLUTION: "512x512"

@@ -32,7 +32,9 @@ func init() {
 
 func ColdStart(functionName string, sinceSeconds int64) (float64, error) {
 
-	scaleLine := fmt.Sprintf(`\[Scale\] function=%s 0 => 1 successful`, functionName)
+	// scaleLine := fmt.Sprintf(`\[Scale\] function=%s 0 => 1 requested`, functionName)
+	// scaleLine := fmt.Sprintf(`function=%s 0 => 1 requested`, functionName)
+	scaleLine := fmt.Sprintf(`\[Ready\] function=%s waited for`, functionName)
 	scaleRe := regexp.MustCompile(scaleLine)
 	var scaleSum, scaleCount float64
 
@@ -74,11 +76,13 @@ func ColdStart(functionName string, sinceSeconds int64) (float64, error) {
 		}
 		err = scanner.Err()
 		if err != nil {
+			log.Fatal("debug 4")
 			return 0, err
 		}
 
 		err = podLogs.Close()
 		if err != nil {
+			log.Fatal("debug 5")
 			return 0, err
 		}
 	}

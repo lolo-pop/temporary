@@ -81,7 +81,7 @@ func main() {
 			if err != nil {
 				log.Printf("WARNING: %s", err.Error())
 			}
-			log.Printf("%s cold start time: %v", f.Name, f.ColdStart)
+			log.Printf("%s cold start time: %v", f.Name, f.ColdStart) // 后续需要确认 需不需要减去processing time
 
 			f.Nodes, err = p.FunctionNodes(f.Name)
 			if err != nil {
@@ -137,7 +137,8 @@ func main() {
 func sPrintMap(m map[string]float64) string {
 	s := ""
 	for key, val := range m {
-		s += fmt.Sprintf("\n%s: %v", key, val)
+		s += fmt.Sprintf("%s: %v", key, val)
 	}
+
 	return s
 }
