@@ -124,16 +124,16 @@ func main() {
 		for _, funcAccPair := range sortedFunctionAccuracyMap {
 			fmt.Println(funcAccPair)
 		}
-
+		ser
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)
 		if err != nil {
 			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err)
 			log.Fatal(errMsg)
 		}
-	
+		functionSCMap
 		fmt.Printf("Timestamp: %d", metrics.Timestamp)
-
+ 
 		batchSize := 4 // 后续可能需要设置成非固定的batch size
 		var preInvocationNum [4][]int // 不同准确度等级的service container 历史request 数据量
 		var curSCReplicasNum [4]int  // 当前系统中不同准确度等级的service container的副本数

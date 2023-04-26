@@ -20,6 +20,8 @@ from gluonts.transform import AddObservedValuesIndicator
 from concurrent.futures import ThreadPoolExecutor
 import config as config
 
+    
+    
 
 def train_model(train_config, split_by_ratio):
     """
@@ -85,10 +87,12 @@ def train_model(train_config, split_by_ratio):
             "DeepAR": DeepAREstimator(
                     prediction_length=prediction_length,
                     freq=train_config["frequency"],
+                    context_length = 10
                 ),
             "Transformer": TransformerEstimator(
                     prediction_length=prediction_length,
                     freq=train_config["frequency"],
+                    prediction_length = 10
                 ),
             # TFT基于quantile regression进行分布预测，通过参数num_outputs指定quantile数量
             #     quantile_list = sum(
@@ -100,19 +104,23 @@ def train_model(train_config, split_by_ratio):
             "TFT": TemporalFusionTransformerEstimator(
                     prediction_length=prediction_length,
                     freq=train_config["frequency"],
-                    num_outputs=9 # quantile regression，用于指定quantile数量
+                    num_outputs=9, # quantile regression，用于指定quantile数量
+                    context_length = 10
                 ),
             "FeedforwardNN": SimpleFeedForwardEstimator(
                     prediction_length=prediction_length,
+                    context_length = 10
                 ),
             "DeepFactor": DeepFactorEstimator(
                     prediction_length=prediction_length,
                     freq=train_config["frequency"],
+                    context_length = 10
                 ),
             "MQRNN": MQRNNEstimator(
                     prediction_length=prediction_length,
                     freq=train_config["frequency"],
-                    quantiles=config.evaluation_quantile
+                    quantiles=config.evaluation_quantile, 
+                    context_length = 10
                 )
         }
 

@@ -1,1 +1,9 @@
-AzurePublicDataset
+*.csv
+*.rar
+*.json
+
+training/point results
+training/predict_models
+training/results
+
+*.txt
