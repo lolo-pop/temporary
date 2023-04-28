@@ -131,7 +131,6 @@ func main() {
 			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err)
 			log.Fatal(errMsg)
 		}
-		functionSCMap
 		fmt.Printf("Timestamp: %d", metrics.Timestamp)
  
 		batchSize := 4 // 后续可能需要设置成非固定的batch size

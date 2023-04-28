@@ -37,9 +37,9 @@ def evaluate_model(evaluate_config):
             completeInvocationTrace.append(invocationList)
             functionStartTime.append(pd.to_datetime(0, unit = "s"))
     prediction_length = evaluate_config["prediction_length"]
-    model_path = evaluate_config["model_path"] / f"{prediction_length}_prediction_length"
-    result_path = result_path = evaluate_config["evaluate_result_path"] / f"{prediction_length}_prediction_length"
-    point_result_path = evaluate_config["point_result_path"] / f"{prediction_length}_prediction_length"
+    model_path = evaluate_config["model_path"] 
+    result_path = result_path = evaluate_config["evaluate_result_path"] 
+    point_result_path = evaluate_config["point_result_path"] 
     os.makedirs(result_path, exist_ok=True)
     os.makedirs(point_result_path, exist_ok=True)   
     for model in config.evaluate_model:
