@@ -5,5 +5,5 @@
 training/point results
 training/predict_models
 training/results
-
+*.log
 *.txt
