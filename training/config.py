@@ -2,7 +2,6 @@ import pandas as pd
 from pathlib import Path
 
 evaluation_quantile = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-prediction_length = [20, 40, 60, 2*60, 3*60, 5*60, 10*60, 20*60, 30*60] # seconds
 baseline_model = ["DeepAR", "Transformer", "TFT", "FeedforwardNN", "DeepFactor", "MQRNN"]
 train_model = ["DeepAR", "Transformer", "FeedforwardNN", "DeepFactor", "MQRNN"] # 用于指定这次要训练的模型
 # train_model = ["TFT"]

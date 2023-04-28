@@ -1,0 +1,333 @@
+nohup: ignoring input
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:02, 127.05it/s]
+/home/rongch05/anaconda3/lib/python3.7/site-packages/pandas/core/dtypes/cast.py:897: UserWarning: Warning: converting a masked element to nan.
+  return arr.astype(dtype, copy=True)
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:02, 127.15it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.83it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 80.02it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 89.81it/s]
+/home/rongch05/anaconda3/lib/python3.7/site-packages/gluonts/evaluation/_base.py:513: RuntimeWarning: divide by zero encountered in double_scalars
+  totals["NRMSE"] = totals["RMSE"] / totals["abs_target_mean"]
+/home/rongch05/anaconda3/lib/python3.7/site-packages/gluonts/evaluation/_base.py:514: RuntimeWarning: divide by zero encountered in double_scalars
+  totals["ND"] = totals["abs_error"] / totals["abs_target_sum"]
+/home/rongch05/anaconda3/lib/python3.7/site-packages/gluonts/evaluation/_base.py:518: RuntimeWarning: divide by zero encountered in double_scalars
+  totals[f"QuantileLoss[{quantile}]"] / totals["abs_target_sum"]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 93.60it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 112.06it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 202it [00:03, 54.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 124.87it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.15it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.80it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.58it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.40it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 93.45it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.43it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:04, 69.47it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 90.03it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 173it [00:04, 37.06it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.27it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 115.63it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 123.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:04, 69.41it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.00it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:03, 89.07it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 119.91it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 103.43it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 87.80it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 120.48it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 81.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 93.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.67it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.87it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 103.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.37it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 107.81it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.65it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 106.60it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 101.85it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.58it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 118.38it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.32it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 122.64it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.12it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 119.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.85it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.66it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.03it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.03it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.62it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.04it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.12it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 93.02it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.97it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.39it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.32it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 118.72it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 117.96it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.76it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 121.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 120.42it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.53it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.03it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.39it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 120.63it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.29it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.77it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 112.46it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 87.03it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 119.96it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.51it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 106.17it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 90.68it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 86.58it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 107.93it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 114.70it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:03, 83.07it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:03, 90.40it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 78.93it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 93.41it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 144it [00:04, 33.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.12it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.28it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 89.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.96it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 89.36it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 58it [00:04, 11.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 80.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 108.38it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.76it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.99it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.74it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.68it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 101.37it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.38it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.08it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.40it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 79.08it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 116it [00:04, 27.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 80.26it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:04, 63.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:04, 21.49it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 112.22it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 144it [00:03, 42.66it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 29it [00:03,  8.65it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:03, 76.06it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 90.37it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 112.01it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:04, 18.29it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 116it [00:03, 31.43it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 111.59it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.21it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 110.40it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:03, 25.95it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.79it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 110.57it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.87it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 109.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.70it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 77.62it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 107.16it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 105.93it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 94.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 85.90it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:04, 63.37it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 74.72it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.48it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.91it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:04, 68.13it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 101.50it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 94.97it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 80.99it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 89.85it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 87.65it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 103.48it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.95it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 72.55it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.53it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 106.57it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 94.32it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 75.14it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 76.91it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 73.26it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 107.78it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.83it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.11it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.87it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.81it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.47it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:04, 60.27it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 94.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 82.64it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 85.52it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:04, 60.33it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 74.05it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:04, 60.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.16it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.57it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.62it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.51it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 106.21it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 89.58it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:04, 78.04it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.47it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.43it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.71it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 103.87it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:03, 25.53it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 90.48it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 98.31it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 78.49it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 76.73it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.46it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.49it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:03, 23.36it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.29it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 79.83it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.67it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.60it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 106.18it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 202it [00:04, 48.15it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 77.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 77.98it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 89.01it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.16it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.81it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.91it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 75.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:04, 86.22it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 58it [00:03, 15.67it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:03, 79.62it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.46it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:04, 56.26it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:04, 70.86it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.04it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:04, 72.60it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 72.42it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 77.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 75.39it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.57it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.10it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.01it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 58it [00:03, 15.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 75.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 104.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.06it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 102.60it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.57it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.16it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 82.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 78.24it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 81.75it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 317it [00:04, 70.63it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.47it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.41it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.00it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 78.30it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:04, 21.64it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.83it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 231it [00:04, 54.93it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 173it [00:04, 42.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 83.54it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.31it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 260it [00:04, 58.23it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 73.73it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 58it [00:04, 13.07it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:04, 19.04it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 70.96it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.95it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.44it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 90.71it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 73.90it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 100.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.43it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 58it [00:04, 12.66it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 92.06it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 29it [00:03,  7.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 86.36it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 87.92it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.23it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.42it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.25it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 96.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.20it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 80.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:03, 77.61it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.65it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.94it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 69.85it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.55it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.25it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 90.26it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 94.83it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 67.39it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 78.28it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 99.01it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 88.02it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 69.95it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 73.17it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 97.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.09it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 85.80it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 76.24it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:03, 95.45it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 84.34it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:05, 57.15it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 91.52it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:05, 67.93it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 87it [00:05, 17.37it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:05, 65.13it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.76it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:04, 58.26it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 72.14it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 71.59it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 288it [00:05, 56.19it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.69it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 71.89it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 69.82it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 29it [00:05,  5.63it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 346it [00:05, 68.11it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 71.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 75.55it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 72.23it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 66.31it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 77.23it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 69.78it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 66.84it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 73.47it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 74.89it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:05, 72.31it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 75.52it/s]
+Running evaluation: 0it [00:00, ?it/s]Running evaluation: 375it [00:04, 79.99it/s]

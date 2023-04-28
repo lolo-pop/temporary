@@ -7,14 +7,10 @@ import sys
 from gluonts.dataset.common import ListDataset
 # Load the pre-trained model
 predictor = Predictor.deserialize(Path("/home/rongch05/openfaas/training/predict_models_by_appID/TFT"))
-args = sys.argv[1]
-print(args)
-args = args.split(",")
-trace = []
-for n in args:
-  trace.append(int(n))
+
 # Define the monitoring sequence
-monitoring_sequence = np.array(trace)
+seq = [140,503,411,388,320,295,288,150]
+monitoring_sequence = np.array([float(n)/60.0 for n in seq])
 # 140,503,411,388,320,295,288,150,203,73,735,577,436,378,469,307,110,95,140
 # Convert the monitoring sequence to GluonTS format
 print(pd.to_datetime(0, unit="s"))

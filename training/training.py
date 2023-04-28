@@ -32,8 +32,8 @@ def train_model(train_config):
       for i in range(len(row)):
         if i == 0:
           continue
-        invocationList.append(int(row[i]))
-
+        invocationList.append(float(row[i]))
+      # print(invocationList)
       completeInvocationTrace.append(invocationList)
   train_ds = ListDataset(
     data_iter = [

@@ -64,10 +64,13 @@ func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName 
 	return 0
 }
 
-func main() {
+type SLO struct {
+	Accuracy  float64
+	latency float64
+}
 
-	var p metrics.Provider
-	p = &metrics.FaasProvider{}
+
+func main() {
 	scaling.Hello("test")
 	rand.Seed(time.Now().UnixNano())
 	// var accuracy [20]float32
@@ -78,10 +81,15 @@ func main() {
 		0.776, 0.720, 0.851, 0.852, 0.662,
 		0.759, 0.839, 0.612, 0.801, 0.790,
 		0.668, 0.654, 0.760, 0.690, 0.853}
+	latency := [20]float32{0.667, 0.901, 0.676, 0.663, 0.822,
+		0.776, 0.720, 0.851, 0.852, 0.662,
+		0.759, 0.839, 0.612, 0.801, 0.790,
+		0.668, 0.654, 0.760, 0.690, 0.853}
 	functionAccuracy := make(map[string]float32)
+	functionLatency := make(map[string]float32)
 	index := 0
-	
-	
+	levelNum := 5
+	SCProfile := scaling.Profile()     // make(map[string][]float32)  [acc, bs1, bs2, bs3, ]
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
@@ -95,36 +103,49 @@ func main() {
 		log.Fatal(errMsg)
 	}
 	defer sub.Unsubscribe()
+
+	var preFunctionRPS map[string][]float32  // 所有函数历史RPS 监测数据 functionName: RPS slice
+
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
 
 		// var functions []types.Function
 		// var nodes []types.Node
 		msg, err := sub.NextMsg(0)
-
-
+		var p metrics.Provider
+		p = &metrics.FaasProvider{}
 		functionNames, err := p.Functions()
+		var predictFunctionRPS map[string]float32 // 下一个时间窗口的所有函数的RPS的预测值 functionName: TPS
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 		// fmt.Println(functionNames)
+
+		//为每个函数映射对应的准确度
 		for _, fname := range functionNames {
 			if strings.Contains(fname, "service") {
 				continue
 			} else if _, ok := functionAccuracy[fname]; !ok {
 				functionAccuracy[fname] = accuracy[index]
+				functionLatency[fname] = latency[index]
 				index += 1
 			}
 		}
 		fmt.Println("current function-accuracy configration:", functionAccuracy)
 	
+
 		// 对所有非service container 按照准确度要求进行排序
 		var sortedFunctionAccuracyMap []scaling.Kv
 		sortedFunctionAccuracyMap = scaling.FunctionAccuracyMapSort(functionAccuracy)
 		for _, funcAccPair := range sortedFunctionAccuracyMap {
 			fmt.Println(funcAccPair)
 		}
-		ser
+		// 根据所有function latency and accuracy requirment 计算每个service container的 latency SLO
+		serviceContainerSLO := scaling.ServiceContainerSLO(levelNum, sortedFunctionAccuracyMap, functionLatency) //  make(map[string]Pair)
+
+		maxSCBatchSize := scaling.SCBatchSize(levelNum, serviceContainerSLO, SCProfile)
+		
+		//反序列从NATS获得的metrics
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)
 		if err != nil {
@@ -133,6 +154,25 @@ func main() {
 		}
 		fmt.Printf("Timestamp: %d", metrics.Timestamp)
  
+
+		// 为每个function预测下一个时间窗口的RPS
+		for _, function := range metrics.Functions {
+			functionName := function.Name
+			if strings.Contains(functionName, "service") {
+				continue
+			}
+			if _, ok := preFunctionRPS[functionName]; ok {
+				preFunctionRPS[functionName] = append(preFunctionRPS[functionName], function.InvocationRate)
+				fmt.Printf("current RPS monitor sequence of function %s: %v", functionName, preFunctionRPS[functionName])  //输出list可能会出错，需要主语 debug
+			} else {
+				preFunctionRPS[functionName] = []float64{function.InvocationRate}
+			}
+			predictFunctionRPS[functionName] = scaling.PredictFunctionRPS(functionName, preFunctionRPS[functionName])
+		}
+
+		//  
+
+
 		batchSize := 4 // 后续可能需要设置成非固定的batch size
 		var preInvocationNum [4][]int // 不同准确度等级的service container 历史request 数据量
 		var curSCReplicasNum [4]int  // 当前系统中不同准确度等级的service container的副本数
@@ -286,12 +326,4 @@ func main() {
 		*/
 		time.Sleep(time.Duration(scalingWindows) * time.Second)
 	}
-}
-
-func sPrintMap(m map[string]float64) string {
-	s := ""
-	for key, val := range m {
-		s += fmt.Sprintf("\n%s: %v", key, val)
-	}
-	return s
 }

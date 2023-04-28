@@ -20,7 +20,7 @@ def predict():
     data = request.json
     sequence = data['monitoring_sequence']
     sequence = sequence.split(',')  
-    monitoring_sequence = np.array([int(n) for n in sequence])
+    monitoring_sequence = np.array([float(n) for n in sequence])
     
     # Convert the monitoring sequence to GluonTS format
     monitoring_data = ListDataset (data_iter =

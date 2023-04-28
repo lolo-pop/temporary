@@ -33,7 +33,7 @@ def evaluate_model(evaluate_config):
                 if i == 0:
                     functionID.append(row[i])
                 else: 
-                    invocationList.append(int(row[i]))
+                    invocationList.append(float(row[i]))
             completeInvocationTrace.append(invocationList)
             functionStartTime.append(pd.to_datetime(0, unit = "s"))
     prediction_length = evaluate_config["prediction_length"]
@@ -94,7 +94,7 @@ def evaluate_model(evaluate_config):
 
             # evaluate概率预测的结果
             # num_workers默认为CPU数，测试设备为一个16核的cpu
-            evaluator = Evaluator(quantiles=config.evaluation_quantile, num_workers=16)
+            evaluator = Evaluator(quantiles=config.evaluation_quantile, num_workers=20)
             agg_metrics, item_metrics = evaluator(tss, forecasts)
 
             evaluation_result["agg_metrics"].append(agg_metrics)
