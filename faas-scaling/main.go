@@ -54,7 +54,7 @@ func init() {
 }
 
 
-func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName string) float32 {
+func getFunctionAccRequire(sortedFunctionAccuracyMap []scaling.Kv, functionName string) float64 {
 	for _, functionPair := range sortedFunctionAccuracyMap {
 		if functionPair.Key == functionName {
 			return functionPair.Value
@@ -70,26 +70,36 @@ type SLO struct {
 }
 
 
+
 func main() {
 	scaling.Hello("test")
 	rand.Seed(time.Now().UnixNano())
-	// var accuracy [20]float32
+	// var accuracy [20]float64
 	// for i := 0; i < 10; i++ {
-	// 	accuracy[i] = rand.Float32()
+	// 	accuracy[i] = rand.float64()
 	// }
-	accuracy := [20]float32{0.667, 0.901, 0.676, 0.663, 0.822,
+	accuracy := [20]float64{0.667, 0.901, 0.676, 0.663, 0.822,
 		0.776, 0.720, 0.851, 0.852, 0.662,
 		0.759, 0.839, 0.612, 0.801, 0.790,
 		0.668, 0.654, 0.760, 0.690, 0.853}
-	latency := [20]float32{0.667, 0.901, 0.676, 0.663, 0.822,
+	latency := [20]float64{0.667, 0.901, 0.676, 0.663, 0.822,
 		0.776, 0.720, 0.851, 0.852, 0.662,
 		0.759, 0.839, 0.612, 0.801, 0.790,
 		0.668, 0.654, 0.760, 0.690, 0.853}
-	functionAccuracy := make(map[string]float32)
-	functionLatency := make(map[string]float32)
+	
+	SCMap := map[int][]int{
+		0: []int{22, 24},
+		1: []int{24, 26},
+		2: []int{26, 28},
+		3: []int{28, 30},
+		4: []int{30, 32},
+		5: []int{32, 34},
+	}
+	functionAccuracy := make(map[string]float64)
+	functionLatency := make(map[string]float64)
 	index := 0
-	levelNum := 5
-	SCProfile := scaling.Profile()     // make(map[string][]float32)  [acc, bs1, bs2, bs3, ]
+	levelNum := 6 
+	SCProfile := scaling.Profile()     // make(map[string][]float64)  [acc, bs1, bs2, bs3, ]
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
@@ -104,7 +114,7 @@ func main() {
 	}
 	defer sub.Unsubscribe()
 
-	var preFunctionRPS map[string][]float32  // 所有函数历史RPS 监测数据 functionName: RPS slice
+	var preFunctionRPS map[string][]float64   // 所有函数历史RPS 监测数据 functionName: RPS slice
 
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
@@ -115,11 +125,18 @@ func main() {
 		var p metrics.Provider
 		p = &metrics.FaasProvider{}
 		functionNames, err := p.Functions()
-		var predictFunctionRPS map[string]float32 // 下一个时间窗口的所有函数的RPS的预测值 functionName: TPS
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		// fmt.Println(functionNames)
+		var upSCRPS map[int]float64      // 当前副本service conatiner 所能承受的最高RPS, 
+		var lowSCRPS map[int]float64      // 当前副本service conatiner 所能承受的最低RPS, 
+		var predictFunctionRPS map[string]float64  // 下一个时间窗口的所有函数的RPS的预测值 functionName: RPS
+		var predictSCRPS map[int]float64 // 下一个时间窗口的service container的RPS 预测值 accuracyLevel[int]: RPS
+
+		//初始化SC RPS的预测值，所有值为0
+		for i := 0; i < levelNum; i++ {
+			predictSCRPS[i] = 0.0
+		}
 
 		//为每个函数映射对应的准确度
 		for _, fname := range functionNames {
@@ -143,8 +160,6 @@ func main() {
 		// 根据所有function latency and accuracy requirment 计算每个service container的 latency SLO
 		serviceContainerSLO := scaling.ServiceContainerSLO(levelNum, sortedFunctionAccuracyMap, functionLatency) //  make(map[string]Pair)
 
-		maxSCBatchSize := scaling.SCBatchSize(levelNum, serviceContainerSLO, SCProfile)
-		
 		//反序列从NATS获得的metrics
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)
@@ -167,10 +182,32 @@ func main() {
 			} else {
 				preFunctionRPS[functionName] = []float64{function.InvocationRate}
 			}
-			predictFunctionRPS[functionName] = scaling.PredictFunctionRPS(functionName, preFunctionRPS[functionName])
+			predictFunctionRPS[functionName] = scaling.PredictFunctionRPS(functionName, preFunctionRPS[functionName]) // 计算function的RPS预测值
+			level := scaling.GetFunctionAccuracyLevel(functionAccuracy[functionName], SCMap)  //计算function 属于哪个level
+			predictSCRPS[level] += predictFunctionRPS[functionName]  //计算SC的RPS的预测值
+		}
+		
+		// 计算当前系统里存在的service container replicas 所能承担的 RPS的上限和下限。
+		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
+		for _,function := range metrics.Functions {
+			functionName := function.Name
+			if strings.Contains(functionName, "service") {
+				if function.Replicas == 0 {
+					fmt.Printf("service container %s is not a running replica", functionName)
+				} else {
+					fields := strings.Split(functionName, "-")
+					accuracyLevel, err := strconv.Atoi(fields[1])
+					if err != nil {
+						log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
+					lowSCRPS[accuracyLevel] = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu)
+					upSCRPS[accuracyLevel] = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu)
+				}
+			}
 		}
 
-		//  
+
+
+		/*
 
 
 		batchSize := 4 // 后续可能需要设置成非固定的batch size
@@ -324,6 +361,6 @@ func main() {
 
 			nats.Publish(jsonMsg)
 		*/
-		time.Sleep(time.Duration(scalingWindows) * time.Second)
+		// time.Sleep(time.Duration(scalingWindows) * time.Second)
 	}
 }

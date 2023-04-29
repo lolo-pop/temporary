@@ -35,10 +35,10 @@ func init() {
 	}
 }
 
-func TopPods(functionName string) (map[string]float64, map[string]float64, error) {
+func TopPods(functionName string) (map[string][]float64, map[string][]float64, error) {
 
-	cpu := make(map[string]float64)
-	mem := make(map[string]float64)
+	cpu := make(map[string][]float64)
+	mem := make(map[string][]float64)
 	// fmt.Printf("function name: %s\n", functionName)
 	listOptions := metav1.ListOptions{
 		LabelSelector: "faas_function=" + functionName,
@@ -51,26 +51,26 @@ func TopPods(functionName string) (map[string]float64, map[string]float64, error
 	for _, podMetric := range podMetrics.Items {
 		podName := podMetric.Name
 
-		// pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
-		// if err != nil {
-		// 	return nil, nil, err
-		// }
+		pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		if err != nil {
+			return nil, nil, err
+		}
 
 		podContainers := podMetric.Containers
 		if len(podContainers) == 0 {
 			// containers still not available
 			continue
 		}
-		cpu[podName] = 0 // initialize cpu counter
-		mem[podName] = 0 // initialize mem counter
+		// cpu[podName] = []float32 // initialize cpu counter
+		// mem[podName] = []float32 // initialize mem counter
 		// containersCount := 0
 
-		for _, container := range podContainers {
+		for i, container := range podContainers {
 			// 计算pod有两种方案：一个是算实际使用量，一个是算实际使用量/资源limits
-			/*
-				containerCpuLimits := float64(pod.Spec.Containers[i].Resources.Limits.Cpu().MilliValue())
-				containerMemLimits := float64(pod.Spec.Containers[i].Resources.Limits.Memory().Value())
 
+			containerCpuLimits := float64(pod.Spec.Containers[i].Resources.Limits.Cpu().MilliValue())
+			containerMemLimits := float64(pod.Spec.Containers[i].Resources.Limits.Memory().Value())
+			/*
 				if containerCpuLimits == 0 {
 					return nil, nil, errors.New("cpu limits not specified")
 				}
@@ -83,8 +83,10 @@ func TopPods(functionName string) (map[string]float64, map[string]float64, error
 			// log.Fatalf("podname %s: cpu %f, memory %f", podName, containerCpuUsage, containerMemUsage)
 			// cpu[podName] += containerCpuUsage / containerCpuLimits // add container cpu usage percentage
 			// mem[podName] += containerMemUsage / containerMemLimits // add container memory usage percentage
-			cpu[podName] += containerCpuUsage
-			mem[podName] += containerMemUsage
+			cpu[podName] = append(cpu[podName], containerCpuUsage)
+			mem[podName] = append(mem[podName], containerMemUsage)
+			cpu[podName] = append(cpu[podName], containerCpuLimits)
+			mem[podName] = append(mem[podName], containerMemLimits)
 			// containersCount = i + 1
 		}
 		// get average percentage of usage between pod's containers

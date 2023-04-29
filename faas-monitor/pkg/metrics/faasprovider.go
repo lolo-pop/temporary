@@ -38,7 +38,7 @@ func (*FaasProvider) ColdStart(functionName string, sinceSeconds int64) (float64
 	return apiserver.ColdStart(functionName, sinceSeconds)
 }
 
-func (*FaasProvider) TopPods(functionName string) (map[string]float64, map[string]float64, error) {
+func (*FaasProvider) TopPods(functionName string) (map[string][]float64, map[string][]float64, error) {
 	return metricsserver.TopPods(functionName)
 }
 

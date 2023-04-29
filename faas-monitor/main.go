@@ -134,7 +134,7 @@ func main() {
 	}
 }
 
-func sPrintMap(m map[string]float64) string {
+func sPrintMap(m map[string][]float64) string {
 	s := ""
 	for key, val := range m {
 		s += fmt.Sprintf("%s: %v", key, val)
