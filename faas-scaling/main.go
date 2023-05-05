@@ -158,8 +158,9 @@ func main() {
 			fmt.Println(funcAccPair)
 		}
 		// 根据所有function latency and accuracy requirment 计算每个service container的 latency SLO
-		serviceContainerSLO := scaling.ServiceContainerSLO(levelNum, sortedFunctionAccuracyMap, functionLatency) //  make(map[string]Pair)
-
+		serviceContainerSLO := scaling.ServiceContainerSLO(SCMap, functionAccuracy, functionLatency) //  make(map[string]Pair)
+		fmt.Printf("service container SLO: %v\n", serviceContainerSLO)
+		
 		//反序列从NATS获得的metrics
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)

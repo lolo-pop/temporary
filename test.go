@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type Queue struct {
@@ -48,6 +47,7 @@ func (q *Queue) isEmpty() bool {
 }
 
 func main() {
-	str := "1"
-	fmt.Println(strconv.Atoi(str))
+	a := []float64{}
+	a = append(a, 1.01, 2.0, 0.4)
+	fmt.Println(a)
 }
