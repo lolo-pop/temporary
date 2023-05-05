@@ -78,10 +78,10 @@ func main() {
 	// for i := 0; i < 10; i++ {
 	// 	accuracy[i] = rand.float64()
 	// }
-	accuracy := [20]float64{0.667, 0.901, 0.676, 0.663, 0.822,
-		0.776, 0.720, 0.851, 0.852, 0.662,
-		0.759, 0.839, 0.612, 0.801, 0.790,
-		0.668, 0.654, 0.760, 0.690, 0.853}
+	accuracy := [20]float64{22.226, 29.066, 29.981, 31.939, 25.687,
+		31.391, 32.991, 26.094, 26.303, 23.245,
+		28.526, 23.302, 28.489, 33.799, 31.171, 
+		33.15, 30.037, 24.051, 29.817, 27.067}
 	latency := [20]float64{0.667, 0.901, 0.676, 0.663, 0.822,
 		0.776, 0.720, 0.851, 0.852, 0.662,
 		0.759, 0.839, 0.612, 0.801, 0.790,
@@ -158,7 +158,7 @@ func main() {
 			fmt.Println(funcAccPair)
 		}
 		// 根据所有function latency and accuracy requirment 计算每个service container的 latency SLO
-		serviceContainerSLO := scaling.ServiceContainerSLO(SCMap, functionAccuracy, functionLatency) //  make(map[string]Pair)
+		serviceContainerSLO := scaling.ServiceContainerSLO(SCMap, functionAccuracy, functionLatency) //  {level: [acc_low, acc_high, latency]}
 		fmt.Printf("service container SLO: %v\n", serviceContainerSLO)
 		
 		//反序列从NATS获得的metrics

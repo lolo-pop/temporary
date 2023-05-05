@@ -19,7 +19,7 @@ def predict():
     # Get the monitoring sequence from the request
     data = request.json
     sequence = data['monitoring_sequence']
-    sequence = sequence.split(',')  
+    # sequence = sequence.split(',')  
     monitoring_sequence = np.array([float(n) for n in sequence])
     
     # Convert the monitoring sequence to GluonTS format
@@ -38,23 +38,24 @@ def predict():
     # predicted_value = forecasts[0].mean(axis=0)[-1]
     print(np.mean(forecasts[0].mean))
     result_dict = {
+      'function_name': data['function_name'],
       'start_date' : str(forecasts[0].start_date),
-      '0.1': json.dumps(float(forecasts[0].quantile(0.1).mean())), 
-      '0.2': json.dumps(float(forecasts[0].quantile(0.2).mean())),
-      '0.3': json.dumps(float(forecasts[0].quantile(0.3).mean())), 
-      '0.4': json.dumps(float(forecasts[0].quantile(0.4).mean())),
-      '0.5': json.dumps(float(forecasts[0].quantile(0.5).mean())), 
-      '0.6': json.dumps(float(forecasts[0].quantile(0.6).mean())),
-      '0.7': json.dumps(float(forecasts[0].quantile(0.7).mean())), 
-      '0.8': json.dumps(float(forecasts[0].quantile(0.8).mean())),
-      '0.9': json.dumps(float(forecasts[0].quantile(0.9).mean())),
-      'mean': json.dumps(float(np.mean(forecasts[0].mean)))
+      'quantile0.1': float(forecasts[0].quantile(0.1).mean()), 
+      'quantile0.2': float(forecasts[0].quantile(0.2).mean()),
+      'quantile0.3': float(forecasts[0].quantile(0.3).mean()), 
+      'quantile0.4': float(forecasts[0].quantile(0.4).mean()),
+      'quantile0.5': float(forecasts[0].quantile(0.5).mean()), 
+      'quantile0.6': float(forecasts[0].quantile(0.6).mean()),
+      'quantile0.7': float(forecasts[0].quantile(0.7).mean()), 
+      'quantile0.8': float(forecasts[0].quantile(0.8).mean()),
+      'quantile0.9': float(forecasts[0].quantile(0.9).mean()),
+      'mean': float(np.mean(forecasts[0].mean))
     }
     print(result_dict)
-    json_str = json.dumps(result_dict)
+    json_str = json.dumps(result_dict, ensure_ascii=False)
 
     # Return the predicted value in the response
-    return jsonify({'predicted_value': json_str})
+    return json_str
 
 if __name__ == '__main__':
     app.run(debug=True)
