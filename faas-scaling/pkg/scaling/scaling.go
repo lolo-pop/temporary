@@ -14,7 +14,7 @@ import (
 
 type Kv struct {
 	Key   string
-	Value float32
+	Value float64
 }
 
 var (
@@ -64,7 +64,7 @@ func Hello(name string) {
 	fmt.Println("hello scaling:", name)
 }
 
-func FunctionAccuracyMapSort(acc map[string]float32) []Kv {
+func FunctionAccuracyMapSort(acc map[string]float64) []Kv {
 
 	var result []Kv
 	for k, v := range acc {
@@ -80,7 +80,7 @@ func FunctionAccuracyMapSort(acc map[string]float32) []Kv {
 	return result
 }
 
-func getLevel(acc float64, SCMap map[int][]int) (int, bool) {
+func GetLevel(acc float64, SCMap map[int][]int) (int, bool) {
 	for level, limits := range SCMap {
 		if acc < float64(limits[1]) && acc >= float64(limits[0]) {
 			return level, true
@@ -96,8 +96,8 @@ func ServiceContainerSLO(SCMap map[int][]int, functionAccuracy map[string]float6
 	}
 	for fname, acc := range functionAccuracy {
 		lat := functionLatency[fname]
-		level, err := getLevel(acc, SCMap)
-		if !err {
+		level, ok := GetLevel(acc, SCMap)
+		if !ok {
 			fmt.Printf("get function %s accuracy level failed", fname)
 		}
 		if minlatency[level] > lat {
