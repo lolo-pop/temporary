@@ -2,6 +2,7 @@ package scaling
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -120,7 +122,7 @@ func PredictFunctionRPS(functionName string, sequences []float64) (float64, erro
 	// 将请求数据转换为 JSON 格式
 	requestDataJson, err := json.Marshal(requestData)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	// 发送 POST 请求
@@ -143,4 +145,62 @@ func PredictFunctionRPS(functionName string, sequences []float64) (float64, erro
 		return 0, err
 	}
 	return responseData.Mean, nil
+}
+
+func zfill(str string, width int) string {
+	for len(str) < width {
+		str = "0" + str
+	}
+
+	return str
+}
+func Profile(path string) (map[string][]float64, error) {
+	file, err := os.Open("/home/rongch05/openfaas/faas-scaling/profiling.csv")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// 创建CSV Reader对象
+	reader := csv.NewReader(file)
+
+	// 读取CSV文件中的所有记录
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// 将CSV记录解析为字典
+	results := make(map[string][]float64)
+	for i, record := range records {
+		if i == 0 {
+			continue
+		} else {
+			configuration := record[0] + zfill(record[1], 4) + zfill(record[2], 2) + record[3]
+			acc, err := strconv.ParseFloat(record[4], 64)
+			if err != nil {
+				return nil, err
+			}
+			lat1, err := strconv.ParseFloat(record[5], 64)
+			if err != nil {
+				return nil, err
+			}
+			lat2, err := strconv.ParseFloat(record[6], 64)
+			if err != nil {
+				return nil, err
+			}
+			results[configuration] = []float64{acc, lat1, lat2}
+		}
+	}
+	return results, nil
+}
+
+func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64) (float64, error) {
+	totalRPS := 0.0
+	return totalRPS, nil
+}
+
+func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64) (float64, error) {
+	totalRPS := 0.0
+	return totalRPS, nil
 }

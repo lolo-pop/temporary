@@ -1,68 +1,59 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"encoding/csv"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
+	"os"
+	"strconv"
 )
 
-type PredictionRequest struct {
-	FunctionName       string   `json:"function_name"`
-	MonitoringSequence []uint64 `json:"monitoring_sequence"`
-}
+func zfill(str string, width int) string {
+	for len(str) < width {
+		str = "0" + str
+	}
 
-type PredictionResponse struct {
-	FunctionName string  `json:"function_name"`
-	StartDate    string  `json:"start_date"`
-	Quantile01   float64 `json:"quantile0.1"`
-	Quantile02   float64 `json:"quantile0.2"`
-	Quantile03   float64 `json:"quantile0.3"`
-	Quantile04   float64 `json:"quantile0.4"`
-	Quantile05   float64 `json:"quantile0.5"`
-	Quantile06   float64 `json:"quantile0.6"`
-	Quantile07   float64 `json:"quantile0.7"`
-	Quantile08   float64 `json:"quantile0.8"`
-	Quantile09   float64 `json:"quantile0.9"`
-	Mean         float64 `json:"mean"`
+	return str
 }
-
 func main() {
-	requestData := PredictionRequest{
-		FunctionName:       "myFunction",
-		MonitoringSequence: []uint64{10, 20, 30, 40, 50},
+	// 打开CSV文件
+	file, err := os.Open("/home/rongch05/openfaas/faas-scaling/profiling.csv")
+	if err != nil {
+		panic(err)
 	}
+	defer file.Close()
 
-	// 将请求数据转换为 JSON 格式
-	requestDataJson, err := json.Marshal(requestData)
+	// 创建CSV Reader对象
+	reader := csv.NewReader(file)
+
+	// 读取CSV文件中的所有记录
+	records, err := reader.ReadAll()
 	if err != nil {
 		panic(err)
 	}
 
-	// 发送 POST 请求
-	response, err := http.Post("http://localhost:5000/predict", "application/json", bytes.NewBuffer(requestDataJson))
-	if err != nil {
-		panic(err)
+	// 将CSV记录解析为字典
+	results := make(map[string][]float64)
+	for i, record := range records {
+		if i == 0 {
+			continue
+		} else {
+			configuration := record[0] + zfill(record[1], 4) + zfill(record[2], 2) + record[3]
+			acc, err := strconv.ParseFloat(record[4], 64)
+			if err != nil {
+				panic(err)
+			}
+			lat1, err := strconv.ParseFloat(record[5], 64)
+			if err != nil {
+				panic(err)
+			}
+			lat2, err := strconv.ParseFloat(record[6], 64)
+			if err != nil {
+				panic(err)
+			}
+			results[configuration] = []float64{acc, lat1, lat2}
+		}
 	}
-	defer response.Body.Close()
 
-	// 读取响应主体中的 JSON 字符串
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	jsonStr := strings.TrimSpace(string(body))
-	fmt.Println(jsonStr)
-	var responseData PredictionResponse
-	err = json.Unmarshal([]byte(string(jsonStr)), &responseData)
-	if err != nil {
-		panic(err)
-	}
-
-	// 打印预测结果
-
+	// 打印字典
+	fmt.Println(results["11024041"])
 }

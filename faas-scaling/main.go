@@ -90,7 +90,14 @@ func main() {
 	functionLatency := make(map[string]float64)
 	index := 0
 	levelNum := 6
-	SCProfile := scaling.Profile() // make(map[string][]float64)  [acc, bs1, bs2, bs3, ]
+	profilingPath := "profiling.csv"
+
+	// make(map[string][]float64)  key: model 1个字符，memory4个字符，cpu 2个字符，batch 1个字符
+	SCProfile, err := scaling.Profile(profilingPath) // make(map[string][]float64)  key: model 1
+	if err != nil {
+		errMsg := fmt.Sprintf("Cannot parse profiling results: %s", err)
+		log.Fatal(errMsg)
+	}
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
@@ -195,8 +202,16 @@ func main() {
 					if err != nil {
 						log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
 					}
-					lowSCRPS[accuracyLevel] = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu)
-					upSCRPS[accuracyLevel] = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu)
+					lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+					if err != nil {
+						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
+						log.Fatalf(errMsg)
+					}
+					upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+					if err != nil {
+						errMsg := fmt.Sprintf("get up RPS failed: %s", err)
+						log.Fatalf(errMsg)
+					}
 				}
 			}
 		}
