@@ -36,4 +36,6 @@ type Provider interface {
 
 	// FunctionNodes returns the nodes in which the function is deployed
 	FunctionNodes(functionName string) ([]string, error)
+
+	BatchSize(functionName string) (map[string]int, error)
 }

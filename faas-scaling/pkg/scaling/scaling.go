@@ -195,12 +195,22 @@ func Profile(path string) (map[string][]float64, error) {
 	return results, nil
 }
 
-func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64) (float64, error) {
+func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int) (float64, error) {
 	totalRPS := 0.0
+	for podName := range cpu {
+		cpuLimits := int(cpu[podName][1] / 1000)
+		memLimits := int(mem[podName][1] / 1024 / 1024)
+		batchSize := int(batch[podName])
+
+		// config: model 1个字符，memory4个字符，cpu 2个字符，batch 1个字符
+		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
+		log.Printf("config is %s in lowRPS function:", config)
+		latency := SCProfile[config][1]
+	}
 	return totalRPS, nil
 }
 
-func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64) (float64, error) {
+func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int) (float64, error) {
 	totalRPS := 0.0
 	return totalRPS, nil
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 type FunctionStats struct {
@@ -21,24 +21,7 @@ type FunctionStats struct {
 }
 
 func main() {
-	jsonStr := `{"function_name": "myFunction", "start_date": "1970-01-01 00:02:30", "quantile0.1": "14.689090728759766", "quantile0.2": "22.616291046142578", "quantile0.3": "28.97735595703125", "quantile0.4": "32.225460052490234", "quantile0.5": "31.39090347290039", "quantile0.6": "33.746707916259766", "quantile0.7": "49.32496643066406", "quantile0.8": "46.91023254394531", "quantile0.9": "54.31256103515625", "mean": "31.39090347290039"}`
-	var functionStats FunctionStats
-
-	err := json.Unmarshal([]byte(jsonStr), &functionStats)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(functionStats.FunctionName)
-	fmt.Println(functionStats.StartDate)
-	fmt.Println(functionStats.Quantile01)
-	fmt.Println(functionStats.Quantile02)
-	fmt.Println(functionStats.Quantile03)
-	fmt.Println(functionStats.Quantile04)
-	fmt.Println(functionStats.Quantile05)
-	fmt.Println(functionStats.Quantile06)
-	fmt.Println(functionStats.Quantile07)
-	fmt.Println(functionStats.Quantile08)
-	fmt.Println(functionStats.Quantile09)
-	fmt.Println(functionStats.Mean)
+	a := 2.68435456e+08
+	aa := strconv.Itoa(int(a/1024/1024)) + strconv.Itoa(int(a/1024/1024))
+	fmt.Println(aa)
 }

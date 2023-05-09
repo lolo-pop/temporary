@@ -34,6 +34,10 @@ func (*FaasProvider) Throughput(functionName string, sinceSeconds int64) (float6
 	return prometheus.Throughput(functionName, sinceSeconds)
 }
 
+func (*FaasProvider) BatchSize(functionName string) (map[string]int, error) {
+	return metricsserver.BatchSize(functionName)
+}
+
 func (*FaasProvider) ColdStart(functionName string, sinceSeconds int64) (float64, error) {
 	return apiserver.ColdStart(functionName, sinceSeconds)
 }

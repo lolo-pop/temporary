@@ -11,6 +11,7 @@ type Function struct {
 	Nodes          []string             `json:"nodes"`
 	Cpu            map[string][]float64 `json:"cpu,omitempty"`
 	Mem            map[string][]float64 `json:"mem,omitempty"`
+	Batch          map[string]int       `json:"batch_size"`
 }
 
 type Node struct {

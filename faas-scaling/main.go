@@ -209,12 +209,12 @@ func main() {
 						upSCRPS[accuracyLevel] = 0
 					} else {
 
-						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
 						if err != nil {
 							errMsg := fmt.Sprintf("get low RPS failed: %s", err)
 							log.Fatalf(errMsg)
 						}
-						upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+						upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
 						if err != nil {
 							errMsg := fmt.Sprintf("get up RPS failed: %s", err)
 							log.Fatalf(errMsg)
