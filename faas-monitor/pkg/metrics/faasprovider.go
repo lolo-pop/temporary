@@ -42,6 +42,10 @@ func (*FaasProvider) TopPods(functionName string) (map[string][]float64, map[str
 	return metricsserver.TopPods(functionName)
 }
 
+func (*FaasProvider) BatchSize(functionName string) (map[string]int, error) {
+	return metricsserver.BatchSize(functionName)
+}
+
 func (*FaasProvider) TopNodes() ([]types.Node, error) {
 	return metricsserver.TopNodes()
 }

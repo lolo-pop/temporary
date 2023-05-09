@@ -89,6 +89,12 @@ func main() {
 			}
 			log.Printf("%s nodes: %v", f.Name, f.Nodes)
 
+			f.Batch, err = p.BatchSize(f.Name)
+			if err != nil {
+				log.Printf("WARNING: %s", err.Error())
+			}
+			log.Printf("%s batch size: %v", f.Name, f.Batch)
+
 			f.Cpu, f.Mem, err = p.TopPods(f.Name)
 			if err != nil {
 				log.Printf("WARNING: %s", err.Error())

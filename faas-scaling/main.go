@@ -98,6 +98,7 @@ func main() {
 		errMsg := fmt.Sprintf("Cannot parse profiling results: %s", err)
 		log.Fatal(errMsg)
 	}
+
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
@@ -202,15 +203,22 @@ func main() {
 					if err != nil {
 						log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
 					}
-					lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
-					if err != nil {
-						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
-						log.Fatalf(errMsg)
-					}
-					upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
-					if err != nil {
-						errMsg := fmt.Sprintf("get up RPS failed: %s", err)
-						log.Fatalf(errMsg)
+					functionReplcas := function.Replicas
+					if functionReplcas == 0 {
+						lowSCRPS[accuracyLevel] = 0
+						upSCRPS[accuracyLevel] = 0
+					} else {
+
+						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+						if err != nil {
+							errMsg := fmt.Sprintf("get low RPS failed: %s", err)
+							log.Fatalf(errMsg)
+						}
+						upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem)
+						if err != nil {
+							errMsg := fmt.Sprintf("get up RPS failed: %s", err)
+							log.Fatalf(errMsg)
+						}
 					}
 				}
 			}

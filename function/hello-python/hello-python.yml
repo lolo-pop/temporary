@@ -1,14 +1,14 @@
 version: 1.0
 provider:
   name: openfaas
-  gateway: http://127.0.0.1:8080
+  gateway: http://127.0.0.1:8080/
 functions:
-  nats-test:
-    lang: python3-debian
-    handler: ./nats-test
-    image: lolopop/nats-test:latest
+  hello-python:
+    lang: python
+    handler: ./hello-python
+    image: lolopop/hello-python:latest
     imagePullPolicy: IfNotPresent
-    label: 
+    label:
       com.openfaas.scale.zero: true
     limits: 
       cpu: 1000m
@@ -18,6 +18,4 @@ functions:
       memory: 256Mi
     environment:
       BATCH_SIZE: "4"
-      RESOLUTION: "512x512"      
-      NATS_ADDRESS: "nats://10.244.0.105:4222"
-      NATS_SUBJECT: "image-test"
+      RESOLUTION: "512x512"

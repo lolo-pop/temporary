@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/lolo-pop/faas-monitor/pkg/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,4 +127,35 @@ func TopNodes() ([]types.Node, error) {
 	}
 
 	return nodes, nil
+}
+
+func BatchSize(functionName string) (map[string]int, error) {
+	batch := make(map[string]int)
+	listOptions := metav1.ListOptions{
+		LabelSelector: "faas_function=" + functionName,
+	}
+	podMetrics, err := mc.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), listOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, podMetric := range podMetrics.Items {
+		podName := podMetric.Name
+
+		pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		for _, envVar := range pod.Spec.Containers[0].Env {
+			if envVar.Name == "BATCH_SIZE" {
+				bs, err := strconv.Atoi(envVar.Value)
+				if err != nil {
+					return nil, err
+				}
+				batch[podName] = bs
+			}
+		}
+	}
+
+	return batch, nil
 }
