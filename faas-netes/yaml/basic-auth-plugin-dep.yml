@@ -57,5 +57,4 @@ spec:
         - name: http
           containerPort: 8080
           protocol: TCP
-      nodeSelector:
-        kubernetes.io/hostname: dragonlan05
+      nodeName: dragonlan05

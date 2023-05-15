@@ -92,7 +92,7 @@ func main() {
 	levelNum := 6
 	profilingPath := "profiling.csv"
 
-	// make(map[string][]float64)  key: model 1个字符，memory4个字符，cpu 2个字符，batch 1个字符
+	// make(map[string][]float64)  f
 	SCProfile, err := scaling.Profile(profilingPath) // make(map[string][]float64)  key: model 1
 	if err != nil {
 		errMsg := fmt.Sprintf("Cannot parse profiling results: %s", err)
@@ -208,8 +208,7 @@ func main() {
 						lowSCRPS[accuracyLevel] = 0
 						upSCRPS[accuracyLevel] = 0
 					} else {
-
-						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
+						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
 						if err != nil {
 							errMsg := fmt.Sprintf("get low RPS failed: %s", err)
 							log.Fatalf(errMsg)

@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: faas-monitor
+  name: faas-test
   namespace: openfaas
   labels:
-    app: faas-monitor
+    app: faas-test
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: faas-monitor
+      app: faas-test
   template:
     metadata:
       labels:
-        app: faas-monitor
+        app: faas-test
     spec:
-      serviceAccountName: faas-monitor
+      serviceAccountName: faas-test
       containers:
-      - name: faas-monitor
-        image: lolopop/faas-monitor:latest
+      - name: faas-test
+        image: lolopop/test:latest
         imagePullPolicy: IfNotPresent
         env:
           - name: SCRAPE_PERIOD

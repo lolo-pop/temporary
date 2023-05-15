@@ -2,13 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   namespace: openfaas 
-  name: faas-monitor
+  name: faas-test
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   namespace: openfaas
-  name: secret-pod-reader-monitor
+  name: secret-pod-reader-test
 rules:
  - apiGroups: ["metrics.k8s.io"]
    resources: ["pods", "nodes"]
@@ -20,12 +20,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: faas-clusterbinding-monitor
+  name: faas-clusterbinding-test
 subjects:
 - kind: ServiceAccount
-  name: faas-monitor
+  name: faas-test
   namespace: openfaas 
 roleRef:
   kind: ClusterRole
-  name: secret-pod-reader-monitor
+  name: secret-pod-reader-test
   apiGroup: rbac.authorization.k8s.io

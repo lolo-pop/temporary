@@ -7,15 +7,18 @@ functions:
     lang: python3-debian
     handler: ./nats-test
     image: lolopop/nats-test:latest
-    imagePullPolicy: IfNotPresent    
+    imagePullPolicy: IfNotPresent      
     limits: 
       cpu: 1000m
       memory: 256Mi
     requests: 
       cpu: 1000m
-      memory: 256Mi  
+      memory: 256Mi
     environment:
       BATCH_SIZE: "1"
       RESOLUTION: "512x512"      
       NATS_ADDRESS: "nats://10.244.0.105:4222"
       NATS_SUBJECT: "image-test"
+    labels:
+      env: bs1
+

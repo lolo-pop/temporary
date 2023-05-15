@@ -195,7 +195,7 @@ func Profile(path string) (map[string][]float64, error) {
 	return results, nil
 }
 
-func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int) (float64, error) {
+func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int, LatSLO float64) (float64, error) {
 	totalRPS := 0.0
 	for podName := range cpu {
 		cpuLimits := int(cpu[podName][1] / 1000)
@@ -206,6 +206,8 @@ func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64,
 		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
 		log.Printf("config is %s in lowRPS function:", config)
 		latency := SCProfile[config][1]
+		rps := 1 / (LatSLO - latency) * float64(batchSize)
+		totalRPS += rps
 	}
 	return totalRPS, nil
 }
