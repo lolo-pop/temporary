@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Kv struct {
@@ -214,5 +215,23 @@ func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64,
 
 func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int) (float64, error) {
 	totalRPS := 0.0
+	for podName := range cpu {
+		cpuLimits := int(cpu[podName][1] / 1024)
+		memLimits := int(mem[podName][1] / 1024 / 1024)
+		batchSize := int(batch[podName])
+		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
+		log.Printf("config is %s in UpRPS function:", config)
+		latency := SCProfile[config][1]
+		rps := 1 / latency * float64(batchSize)
+		totalRPS += rps
+	}
 	return totalRPS, nil
+}
+
+func WarmupFunction(level int, rps float64, wg *sync.WaitGroup, m *sync.Map, functionName string) (string, error) {
+	return functionName, nil
+}
+
+func RemoveFunction(level int, rps float64, wg *sync.WaitGroup, m *sync.Map, functionName string) (string, error) {
+	return functionName, nil
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/lolo-pop/faas-scaling/pkg/metrics"
@@ -102,7 +103,7 @@ func main() {
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
-		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err)
+		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err.Error)
 		log.Fatal(errMsg)
 	}
 	defer nc.Close()
@@ -160,7 +161,7 @@ func main() {
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)
 		if err != nil {
-			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err)
+			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err.Error)
 			log.Fatal(errMsg)
 		}
 		fmt.Printf("Timestamp: %d", metrics.Timestamp)
@@ -192,34 +193,66 @@ func main() {
 
 		// 计算当前系统里存在的service container replicas 所能承担的 RPS的上限和下限。
 		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
+
+		//每一个准确度level 都对应openfaas唯一一个function（service container）
+		var serviceContainerName map[int]string
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 			if strings.Contains(functionName, "service") {
+				fields := strings.Split(functionName, "-") // service-1-random
+				accuracyLevel, err := strconv.Atoi(fields[1])
+				serviceContainerName[accuracyLevel] = functionName
+				if err != nil {
+					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
+				}
 				if function.Replicas == 0 {
 					fmt.Printf("service container %s is not a running replica", functionName)
+					lowSCRPS[accuracyLevel] = 0
+					upSCRPS[accuracyLevel] = 0
 				} else {
-					fields := strings.Split(functionName, "-") // service-1-random
-					accuracyLevel, err := strconv.Atoi(fields[1])
+					lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
 					if err != nil {
-						log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
+						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
+						log.Fatalf(errMsg)
 					}
-					functionReplcas := function.Replicas
-					if functionReplcas == 0 {
-						lowSCRPS[accuracyLevel] = 0
-						upSCRPS[accuracyLevel] = 0
-					} else {
-						lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
-						if err != nil {
-							errMsg := fmt.Sprintf("get low RPS failed: %s", err)
-							log.Fatalf(errMsg)
-						}
-						upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
-						if err != nil {
-							errMsg := fmt.Sprintf("get up RPS failed: %s", err)
-							log.Fatalf(errMsg)
-						}
+					upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
+					if err != nil {
+						errMsg := fmt.Sprintf("get up RPS failed: %s", err)
+						log.Fatalf(errMsg)
 					}
 				}
+			}
+
+		}
+
+		//predictSCRPS 和 UpSCRPS的差值
+		var deltaRPS map[int]float64
+		index := 0.8
+		var wg sync.WaitGroup
+		var m sync.Map
+		for level, rps := range predictSCRPS {
+
+			lowBound := (upSCRPS[level]-lowSCRPS[level])*index + lowSCRPS[level]
+			upBound := upSCRPS[level]
+			if rps > upBound {
+				wg.Add(1)
+				go func(level int, rps float64) {
+					result, err := scaling.WarmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
+					if err != nil {
+						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error)
+						log.Fatalf(errMsg)
+					}
+				}(level, rps)
+				// go scaling.warmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
+			} else if rps < lowBound {
+				go func(level int, rps float64) {
+					result, err := scaling.RemoveFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
+					if err != nil {
+						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error)
+						log.Fatalf(errMsg)
+					}
+				}(level, rps)
+				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}
 		}
 	}

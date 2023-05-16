@@ -96,22 +96,47 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/openfaas/faas-netes/pkg/client/clientset/versioned/scheme"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 )
 
+var clientset *kubernetes.Clientset
+
+func init() {
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	// creates the clientset
+	clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
 func main() {
 	// 设置 OpenFaaS API 网关地址和函数名称
 	gateway := "http://gateway.openfaas.svc.cluster.local:8080"
-	function := "nats-test"
-
+	functionName := "nats-test"
+	namespace := "openfaas-fn"
 	for i := 0; i < 5; i++ {
 		batchSize := i + 1
-		scaleFunction(gateway, function, i+1, batchSize)
+		// scaleFunction(gateway, functionName, i+1, batchSize)
+		scaleFunction(gateway, functionName, i+1, batchSize)
 		time.Sleep(time.Second * 20)
 	}
 }
@@ -259,4 +284,54 @@ func updateFunctionConfig(gatewayURL string, updatedYamlConfig []byte) error {
 	}
 
 	return nil
+}
+
+func updateFunctionK8s(namespace string, functionName string, batchSize int) {
+	podList, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{
+		LabelSelector: fmt.Sprintf("faas_function=%s", functionName),
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	if len(podList.Items) == 0 {
+		panic(fmt.Sprintf("No running pods found for function %s", functionName))
+	}
+	podName := podList.Items[0].Name
+
+	// 获取OpenFaaS函数的环境变量
+	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, v1.GetOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// 解码Pod的注释以获取OpenFaaS函数的环境变量
+	var functionSpec function
+	err = runtime.DecodeInto(serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer(), []byte(pod.Annotations["com.openfaas.scale.zero.function"]), &functionSpec)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// 更新OpenFaaS函数的环境变量
+	functionSpec.Environment["MY_VAR"] = "my-new-value"
+
+	// 将更新后的函数规范编码为JSON格式
+	functionJSON, err := json.Marshal(functionSpec)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// 更新Pod的注释以更新OpenFaaS函数的环境变量
+	pod.Annotations["com.openfaas.scale.zero.function"] = string(functionJSON)
+	_, err = clientset.CoreV1().Pods(namespace).Update(context.TODO(), pod, v1.UpdateOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+}
+
+type function struct {
+	Name        string            `json:"name"`
+	Image       string            `json:"image"`
+	EnvProcess  string            `json:"envProcess"`
+	Environment map[string]string `json:"environment"`
 }

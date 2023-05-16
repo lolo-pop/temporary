@@ -2,26 +2,45 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+	"sync"
+	"time"
 )
 
-type FunctionStats struct {
-	FunctionName string `json:"function_name"`
-	StartDate    string `json:"start_date"`
-	Quantile01   string `json:"quantile0.1"`
-	Quantile02   string `json:"quantile0.2"`
-	Quantile03   string `json:"quantile0.3"`
-	Quantile04   string `json:"quantile0.4"`
-	Quantile05   string `json:"quantile0.5"`
-	Quantile06   string `json:"quantile0.6"`
-	Quantile07   string `json:"quantile0.7"`
-	Quantile08   string `json:"quantile0.8"`
-	Quantile09   string `json:"quantile0.9"`
-	Mean         string `json:"mean"`
+func warmupFunction(key int, value float32, wg *sync.WaitGroup, m *sync.Map) {
+	defer wg.Done()
+	fmt.Printf("Key: %d, Value: %f\n", key, value)
+	time.Sleep(time.Second * 5)
+	m.Store(key, true)
+
 }
 
 func main() {
-	a := 2.68435456e+08
-	aa := strconv.Itoa(int(a/1024/1024)) + strconv.Itoa(int(a/1024/1024))
-	fmt.Println(aa)
+	deltaRPS := map[int]float32{
+		1: 0.5,
+		2: 0.8,
+		3: 0.3,
+	}
+
+	var wg sync.WaitGroup
+	var m sync.Map
+
+	for key, value := range deltaRPS {
+		wg.Add(1)
+		go warmupFunction(key, value, &wg, &m)
+	}
+
+	// Do other things here
+
+	// Wait for goroutines to complete
+	for key := range deltaRPS {
+		for {
+			if _, ok := m.Load(key); ok {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		fmt.Printf("%d completed", key)
+	}
+
+	// Do more things here
 }
