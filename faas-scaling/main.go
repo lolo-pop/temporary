@@ -217,7 +217,7 @@ func main() {
 					}
 					upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
 					if err != nil {
-						errMsg := fmt.Sprintf("get up RPS failed: %s", err)
+						errMsg := fmt.Sprintf("get up RPS failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
 				}
@@ -226,10 +226,8 @@ func main() {
 		}
 
 		//predictSCRPS 和 UpSCRPS的差值
-		var deltaRPS map[int]float64
 		index := 0.8
 		var wg sync.WaitGroup
-		var m sync.Map
 		for level, rps := range predictSCRPS {
 
 			lowBound := (upSCRPS[level]-lowSCRPS[level])*index + lowSCRPS[level]
@@ -237,23 +235,29 @@ func main() {
 			if rps > upBound {
 				wg.Add(1)
 				go func(level int, rps float64) {
-					result, err := scaling.WarmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
+					defer wg.Done()
+					result, err := scaling.WarmupFunction(level, rps-upBound, serviceContainerName[level])
 					if err != nil {
-						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error)
+						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
+					log.Printf("warmup function %s succeeded, warmed up %s function replicas", serviceContainerName[level], result)
 				}(level, rps)
 				// go scaling.warmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
 			} else if rps < lowBound {
+				wg.Add(1)
 				go func(level int, rps float64) {
-					result, err := scaling.RemoveFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
+					defer wg.Done()
+					result, err := scaling.RemoveFunction(level, lowBound-rps, serviceContainerName[level])
 					if err != nil {
-						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error)
+						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
+					log.Printf("remove function %s succeeded, remove %s function replicas", serviceContainerName[level], result)
 				}(level, rps)
 				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}
 		}
+		wg.Wait()
 	}
 }

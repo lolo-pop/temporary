@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 type Kv struct {
@@ -228,10 +227,12 @@ func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, 
 	return totalRPS, nil
 }
 
-func WarmupFunction(level int, rps float64, wg *sync.WaitGroup, m *sync.Map, functionName string) (string, error) {
+func WarmupFunction(level int, rps float64, functionName string) (string, error) {
+
 	return functionName, nil
 }
 
-func RemoveFunction(level int, rps float64, wg *sync.WaitGroup, m *sync.Map, functionName string) (string, error) {
+func RemoveFunction(level int, rps float64, functionName string) (string, error) {
+
 	return functionName, nil
 }
