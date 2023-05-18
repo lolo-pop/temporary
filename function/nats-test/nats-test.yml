@@ -8,6 +8,10 @@ functions:
     handler: ./nats-test
     image: lolopop/nats-test:latest
     imagePullPolicy: IfNotPresent    
+    labels:
+      com.openfaas.scale.zero: true
+      com.openfaas.scale.min: "1"
+      com.openfaas.scale.max: "1"
     limits: 
       cpu: 1000m
       memory: 256Mi

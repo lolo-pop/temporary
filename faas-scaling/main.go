@@ -195,33 +195,36 @@ func main() {
 		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
 
 		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
-		var serviceContainerName map[int]string
+		var serviceContainerName map[int][]string
 		for _, function := range metrics.Functions {
 			functionName := function.Name
+
 			if strings.Contains(functionName, "service") {
 				fields := strings.Split(functionName, "-") // service-1-random
 				accuracyLevel, err := strconv.Atoi(fields[1])
-				serviceContainerName[accuracyLevel] = functionName
+				lowRps := 0.0
+				upRps := 0.0
 				if err != nil {
 					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
 				}
+				serviceContainerName[accuracyLevel] = append(serviceContainerName[accuracyLevel], functionName)
 				if function.Replicas == 0 {
 					fmt.Printf("service container %s is not a running replica", functionName)
-					lowSCRPS[accuracyLevel] = 0
-					upSCRPS[accuracyLevel] = 0
-				} else {
-					lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
-					if err != nil {
 
+				} else {
+					lowRps, err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
+					if err != nil {
 						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
 						log.Fatalf(errMsg)
 					}
-					upSCRPS[accuracyLevel], err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
+					upRps, err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
 					if err != nil {
 						errMsg := fmt.Sprintf("get up RPS failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
 				}
+				lowSCRPS[accuracyLevel] += lowRps
+				upSCRPS[accuracyLevel] += upRps
 			}
 
 		}

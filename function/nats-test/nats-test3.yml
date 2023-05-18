@@ -20,4 +20,6 @@ functions:
       NATS_ADDRESS: "nats://10.244.0.105:4222"
       NATS_SUBJECT: "image-test"
     labels:
-      env: bs3
+      com.openfaas.scale.zero: true
+      com.openfaas.scale.min: "1"
+      com.openfaas.scale.max: "1"
