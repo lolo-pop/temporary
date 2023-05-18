@@ -212,6 +212,7 @@ func main() {
 				} else {
 					lowSCRPS[accuracyLevel], err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
 					if err != nil {
+
 						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
 						log.Fatalf(errMsg)
 					}
