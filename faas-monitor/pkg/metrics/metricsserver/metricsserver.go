@@ -120,9 +120,15 @@ func TopNodes() ([]types.Node, error) {
 		}
 		nodeCpuCapacity := node.Status.Capacity.Cpu().MilliValue()
 		nodeMemCapacity := node.Status.Capacity.Memory().Value()
+		var cpu []float64
+		var mem []float64
+		cpu = append(cpu, float64(nodeMetric.Usage.Cpu().MilliValue()))
+		cpu = append(cpu, float64(nodeCpuCapacity))
+		mem = append(mem, float64(nodeMetric.Usage.Memory().Value())/1024/1024)
+		mem = append(mem, float64(nodeMemCapacity)/1024/1024)
 
-		cpu := float64(nodeMetric.Usage.Cpu().MilliValue()) / float64(nodeCpuCapacity)
-		mem := float64(nodeMetric.Usage.Memory().Value()) / float64(nodeMemCapacity)
+		// cpu := float64(nodeMetric.Usage.Cpu().MilliValue()) / float64(nodeCpuCapacity)
+		// mem := float64(nodeMetric.Usage.Memory().Value()) / float64(nodeMemCapacity)
 		nodes = append(nodes, types.Node{Name: nodeName, Cpu: cpu, Mem: mem})
 	}
 

@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/lolo-pop/faas-scaling/pkg/types"
 )
 
 type Kv struct {
@@ -227,12 +229,65 @@ func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, 
 	return totalRPS, nil
 }
 
-func WarmupFunction(level int, rps float64, functionName string) (string, error) {
+func feasibleSet(cpu []int, mem []int, bs []int, level int, rps float64, SCProfile map[string][]float64, LatSLO float64) [][]float64 {
+	var res [][]float64
+	for _, b := range bs {
+		for _, c := range cpu {
+			for _, m := range mem {
+				config := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(b)
+				profile := SCProfile[config]
+				execTime := profile[1]
+				waitTime := float64(b) / rps
+				lowRps := 1 / (LatSLO - execTime) * float64(b)
+				upRps := 1 / execTime * float64(b)
+				if execTime+waitTime < LatSLO && rps > lowRps {
+					res = append(res, []float64{float64(b), float64(c), float64(m), lowRps, upRps})
+				}
+			}
+		}
+	}
+	return res
+}
+
+type ResourceEfficient struct {
+	config    []float64
+	efficient float64
+}
+
+func resEfficient(alpha float64, Nodes []types.Node, config [][]float64) ([]ResourceEfficient, ResourceEfficient) {
+	maxEfficient := 0.0
+	maxConfig := 0
+	var res []ResourceEfficient
+	for i, cnf := range config {
+		efficient := cnf[4] / (cnf[1]*alpha + cnf[2])
+		if efficient > maxEfficient {
+			maxEfficient = efficient
+			maxConfig = i
+		}
+		res = append(res, ResourceEfficient{cnf, efficient})
+	}
+	results := ResourceEfficient{config[maxConfig], maxEfficient}
+	return res, results
+}
+
+func WarmupFunction(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, functionName string, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) (string, error) {
+	curRps := rps
+	n := 0
+	for curRps > 0 {
+		feasibleConfig := feasibleSet(cpu, mem, bs, level, rps, SCProfile, LatSLO)
+		if len(feasibleConfig) == 0 {
+			log.Fatalln("feasible config set is null")
+		} else {
+			configEfficientSet, maxEfficient := resEfficient(alpha, nodes, feasibleConfig)
+			n = n + 1
+		}
+
+	}
 
 	return functionName, nil
 }
 
-func RemoveFunction(level int, rps float64, functionName string) (string, error) {
+func RemoveFunction(level int, rps float64, functionName string, Nodes []types.Node) (string, error) {
 
 	return functionName, nil
 }

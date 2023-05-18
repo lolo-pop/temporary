@@ -103,7 +103,7 @@ func main() {
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
-		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err.Error)
+		errMsg := fmt.Sprintf("Cannot connect to nats: %s", err.Error())
 		log.Fatal(errMsg)
 	}
 	defer nc.Close()
@@ -161,7 +161,7 @@ func main() {
 		var metrics types.Message
 		err = json.Unmarshal(msg.Data, &metrics)
 		if err != nil {
-			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err.Error)
+			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err.Error())
 			log.Fatal(errMsg)
 		}
 		fmt.Printf("Timestamp: %d", metrics.Timestamp)
@@ -194,7 +194,7 @@ func main() {
 		// 计算当前系统里存在的service container replicas 所能承担的 RPS的上限和下限。
 		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
 
-		//每一个准确度level 都对应openfaas唯一一个function（service container）
+		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
 		var serviceContainerName map[int]string
 		for _, function := range metrics.Functions {
 			functionName := function.Name
@@ -227,16 +227,19 @@ func main() {
 
 		//predictSCRPS 和 UpSCRPS的差值
 		index := 0.8
+		bs := []int{1, 2, 4, 8}
+		cpu := []int{2, 4, 6, 8, 10, 12, 14, 16}
+		mem := []int{256, 512, 1024, 2048, 4096, 6144, 8192}
+		alpha := float64(128 / 30)
 		var wg sync.WaitGroup
 		for level, rps := range predictSCRPS {
-
 			lowBound := (upSCRPS[level]-lowSCRPS[level])*index + lowSCRPS[level]
 			upBound := upSCRPS[level]
 			if rps > upBound {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					result, err := scaling.WarmupFunction(level, rps-upBound, serviceContainerName[level])
+					result, err := scaling.WarmupFunction(alpha, cpu, mem, bs, level, rps-upBound, serviceContainerName[level], metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
 					if err != nil {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
@@ -248,7 +251,7 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					result, err := scaling.RemoveFunction(level, lowBound-rps, serviceContainerName[level])
+					result, err := scaling.RemoveFunction(level, lowBound-rps, serviceContainerName[level], metrics.Nodes)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)

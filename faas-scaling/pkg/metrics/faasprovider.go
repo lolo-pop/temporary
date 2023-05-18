@@ -42,14 +42,13 @@ func (*FaasProvider) ColdStart(functionName string, sinceSeconds int64) (float64
 	return apiserver.ColdStart(functionName, sinceSeconds)
 }
 
-func (*FaasProvider) TopPods(functionName string) (map[string]float64, map[string]float64, error) {
+func (*FaasProvider) TopPods(functionName string) (map[string][]float64, map[string][]float64, error) {
 	return metricsserver.TopPods(functionName)
 }
 
 func (*FaasProvider) TopNodes() ([]types.Node, error) {
 	return metricsserver.TopNodes()
 }
-
 func (*FaasProvider) FunctionsInNode(nodeName string) ([]string, error) {
 	return apiserver.FunctionsInNode(nodeName)
 }

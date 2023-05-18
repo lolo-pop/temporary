@@ -26,7 +26,7 @@ type Provider interface {
 	ColdStart(functionName string, SinceSeconds int64) (float64, error)
 
 	// TopPods provides function's current average CPU and memory percentage usage for each replica
-	TopPods(functionName string) (map[string]float64, map[string]float64, error)
+	TopPods(functionName string) (map[string][]float64, map[string][]float64, error)
 
 	// TopNodes provides nodes current CPU and memory percentage usage
 	TopNodes() ([]types.Node, error)

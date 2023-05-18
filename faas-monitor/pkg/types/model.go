@@ -15,10 +15,10 @@ type Function struct {
 }
 
 type Node struct {
-	Name      string   `json:"name"`
-	Cpu       float64  `json:"cpu"`
-	Mem       float64  `json:"mem"`
-	Functions []string `json:"functions,omitempty"`
+	Name      string    `json:"name"`
+	Cpu       []float64 `json:"cpu"`
+	Mem       []float64 `json:"mem"`
+	Functions []string  `json:"functions,omitempty"`
 }
 
 type Message struct {
