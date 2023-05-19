@@ -125,11 +125,14 @@ func main() {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		var upSCRPS map[int]float64               // 当前副本service conatiner 所能承受的最高RPS,
-		var lowSCRPS map[int]float64              // 当前副本service conatiner 所能承受的最低RPS,
-		var predictFunctionRPS map[string]float64 // 下一个时间窗口的所有函数的RPS的预测值 functionName: RPS
-		var predictSCRPS map[int]float64          // 下一个时间窗口的service container的RPS 预测值 accuracyLevel[int]: RPS
-
+		// var upSCRPS map[int]float64               // 当前副本service conatiner 所能承受的最高RPS,
+		// var lowSCRPS map[int]float64              // 当前副本service conatiner 所能承受的最低RPS,
+		// var predictFunctionRPS map[string]float64 // 下一个时间窗口的所有函数的RPS的预测值 functionName: RPS
+		// var predictSCRPS map[int]float64 // 下一个时间窗口的service container的RPS 预测值 accuracyLevel[int]: RPS
+		upSCRPS := make(map[int]float64)
+		lowSCRPS := make(map[int]float64)
+		predictFunctionRPS := make(map[string]float64)
+		predictSCRPS := make(map[int]float64)
 		//初始化SC RPS的预测值，所有值为0
 		for i := 0; i < levelNum; i++ {
 			predictSCRPS[i] = 0.0
@@ -195,22 +198,21 @@ func main() {
 		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
 
 		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
-		var serviceContainerName map[int][]string
+		serviceContainerName := make(map[int][]string)
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 
 			if strings.Contains(functionName, "service") {
 				fields := strings.Split(functionName, "-") // service-1-random
 				accuracyLevel, err := strconv.Atoi(fields[1])
-				lowRps := 0.0
-				upRps := 0.0
 				if err != nil {
 					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
 				}
+				lowRps := 0.0
+				upRps := 0.0
 				serviceContainerName[accuracyLevel] = append(serviceContainerName[accuracyLevel], functionName)
 				if function.Replicas == 0 {
 					fmt.Printf("service container %s is not a running replica", functionName)
-
 				} else {
 					lowRps, err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
 					if err != nil {
@@ -226,7 +228,6 @@ func main() {
 				lowSCRPS[accuracyLevel] += lowRps
 				upSCRPS[accuracyLevel] += upRps
 			}
-
 		}
 
 		//predictSCRPS 和 UpSCRPS的差值
@@ -243,12 +244,13 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					result, err := scaling.WarmupFunction(alpha, cpu, mem, bs, level, rps-upBound, serviceContainerName[level], metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
+					schedulerRes, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
+					scaling.WarmupInstace(schedulerRes, serviceContainerName[level])
 					if err != nil {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("warmup function %s succeeded, warmed up %s function replicas", serviceContainerName[level], result)
+					log.Printf("warmup function %s succeeded, warmed up %v function replicas", serviceContainerName[level], schedulerRes)
 				}(level, rps)
 				// go scaling.warmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
 			} else if rps < lowBound {
@@ -260,7 +262,7 @@ func main() {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("remove function %s succeeded, remove %s function replicas", serviceContainerName[level], result)
+					log.Printf("remove function %s succeeded, remove %v function replicas", serviceContainerName[level], result)
 				}(level, rps)
 				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}

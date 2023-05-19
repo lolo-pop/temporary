@@ -203,7 +203,6 @@ func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64,
 		cpuLimits := int(cpu[podName][1] / 1000)
 		memLimits := int(mem[podName][1] / 1024 / 1024)
 		batchSize := int(batch[podName])
-
 		// config: model 1个字符，memory4个字符，cpu 2个字符，batch 1个字符
 		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
 		log.Printf("config is %s in lowRPS function:", config)
@@ -254,7 +253,7 @@ type ResourceEfficient struct {
 	efficient float64
 }
 
-func resEfficient(alpha float64, Nodes []types.Node, config [][]float64) ([]ResourceEfficient, ResourceEfficient) {
+func resEfficient(alpha float64, config [][]float64) ([]ResourceEfficient, ResourceEfficient) {
 	maxEfficient := 0.0
 	maxConfig := 0
 	var res []ResourceEfficient
@@ -266,28 +265,64 @@ func resEfficient(alpha float64, Nodes []types.Node, config [][]float64) ([]Reso
 		}
 		res = append(res, ResourceEfficient{cnf, efficient})
 	}
-	results := ResourceEfficient{config[maxConfig], maxEfficient}
-	return res, results
+	maxres := ResourceEfficient{config[maxConfig], maxEfficient}
+	return res, maxres
 }
 
-func WarmupFunction(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, functionName string, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) (string, error) {
+func instancePlacement(alpha float64, nodes []types.Node, level int, config []float64) (string, []types.Node) {
+	// input: 当前集群使用率
+	pI := 0
+	minIndex := 1000.0
+	for i, node := range nodes {
+		// nodeName := node.Name
+		usageCpu := node.Cpu[0]
+		capacityCpu := node.Cpu[1]
+		usageMem := node.Mem[0]
+		capacityMem := node.Mem[1]
+		index := alpha*(usageCpu/capacityCpu) + usageMem/capacityMem
+		if index < minIndex {
+			pI = i
+			minIndex = index
+		}
+	}
+	nodeName := nodes[pI].Name
+	cpu := config[1]
+	mem := config[2]
+	nodes[pI].Cpu[0] = nodes[pI].Cpu[0] + cpu*1000
+	nodes[pI].Mem[0] = nodes[pI].Mem[0] + mem*1000
+	return nodeName, nodes
+}
+
+type Scheduler struct {
+	nodeName string
+	config   []float64
+}
+
+func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) ([]Scheduler, error) {
 	curRps := rps
+	curNodes := nodes
 	n := 0
+	var schedulerRes []Scheduler
 	for curRps > 0 {
 		feasibleConfig := feasibleSet(cpu, mem, bs, level, rps, SCProfile, LatSLO)
 		if len(feasibleConfig) == 0 {
 			log.Fatalln("feasible config set is null")
 		} else {
-			configEfficientSet, maxEfficient := resEfficient(alpha, nodes, feasibleConfig)
+			_, maxEfficient := resEfficient(alpha, feasibleConfig)
 			n = n + 1
+			instanceRps := maxEfficient.config[4] // upRps
+			curRps = curRps - instanceRps
+			nodeName := ""
+			nodeName, curNodes = instancePlacement(alpha, curNodes, level, maxEfficient.config)
+			schedulerRes = append(schedulerRes, Scheduler{nodeName, maxEfficient.config})
 		}
-
 	}
-
-	return functionName, nil
+	return schedulerRes, nil
 }
+func WarmupInstace(schedulerRes []Scheduler, curSCfunctionName []string) {
 
-func RemoveFunction(level int, rps float64, functionName string, Nodes []types.Node) (string, error) {
+}
+func RemoveFunction(level int, rps float64, functionName []string, Nodes []types.Node) ([]string, error) {
 
 	return functionName, nil
 }
