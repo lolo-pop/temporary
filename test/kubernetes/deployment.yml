@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+  namespace: openfaas
+  labels:
+    app: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      serviceAccountName: test
+      containers:
+      - name: test
+        image: lolopop/test:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: SCRAPE_PERIOD
+            value: "30"
+          - name: PROMETHEUS_URL
+            value: "http://prometheus.openfaas.svc.cluster.local:9090"
+          - name: GATEWAY_URL
+            value: "http://gateway.openfaas.svc.cluster.local:8080"
+          - name: NATS_URL
+            value: "http://nats.openfaas.svc.cluster.local:4222"
+          - name: NATS_SUBJECT
+            value: "metrics"
+      nodeName: dragonlan05

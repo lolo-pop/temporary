@@ -1,4 +1,4 @@
-module github.com/lolo-pop/faas-monitor
+module github.com/lolo-pop/faas-test
 
 go 1.15
 
