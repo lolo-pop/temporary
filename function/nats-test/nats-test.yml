@@ -12,6 +12,7 @@ functions:
       com.openfaas.scale.zero: true
       com.openfaas.scale.min: "1"
       com.openfaas.scale.max: "1"
+      instance.idle: false
     limits: 
       cpu: 1000m
       memory: 256Mi

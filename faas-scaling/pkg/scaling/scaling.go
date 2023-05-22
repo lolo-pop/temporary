@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lolo-pop/faas-scaling/pkg/types"
 )
@@ -298,7 +299,7 @@ type Scheduler struct {
 	config   []float64
 }
 
-func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) ([]Scheduler, error) {
+func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) ([]Scheduler, int, error) {
 	curRps := rps
 	curNodes := nodes
 	n := 0
@@ -317,13 +318,129 @@ func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps fl
 			schedulerRes = append(schedulerRes, Scheduler{nodeName, maxEfficient.config})
 		}
 	}
-	return schedulerRes, nil
+	return schedulerRes, n, nil
 }
 
-func WarmupInstace(schedulerRes []Scheduler, curSCfunctionName []string) {
-
+func functionNameHash(curSCfunctionName []string, level int) ([]int, error) {
+	nameHash := make([]int, 1000)
+	for _, item := range curSCfunctionName {
+		indexStr := strings.Split(item, "-")[2]
+		index, err := strconv.Atoi(indexStr)
+		if err != nil {
+			return nameHash, err
+		}
+		nameHash[index] = 1
+	}
+	return nameHash, nil
 }
-func RemoveFunction(level int, rps float64, functionName []string, Nodes []types.Node) ([]string, error) {
+
+func deployFunction(level int, index int, serviceContainerImage map[int]string, functionConfig Scheduler) error {
+	client := &http.Client{Timeout: 10 * time.Second}
+	functionName := fmt.Sprintf("service-%d-%d", level, index)
+	imageName := serviceContainerImage[level]
+	node := functionConfig.nodeName
+	batchSize := strconv.Itoa(int(functionConfig.config[0]))
+	cpu := strconv.Itoa(int(functionConfig.config[1])) + "m"
+	mem := strconv.Itoa(int(functionConfig.config[2])) + "Mi"
+	placementLabel := fmt.Sprintf("kubernetes.io/hostname=%s", node)
+	gatewayURL := "http://gateway.openfaas.svc.cluster.local:8080"
+	requestData := map[string]interface{}{
+		"service": functionName,
+		"image":   imageName,
+		"envVars": map[string]string{
+			"BATCH_SIZE":   batchSize,
+			"NATS_ADDRESS": "http://nats.openfaas.svc.cluster.local:4222",
+			"NATS_SUBJECT": "image-test",
+			"RESOLUTION":   "512x512",
+		},
+		"envProcess": "python3 index.py",
+		"limits": map[string]string{
+			"memory": mem,
+			"cpu":    cpu,
+		},
+		"request": map[string]string{
+			"memory": mem,
+			"cpu":    cpu,
+		},
+		"labels": map[string]string{
+			"com.openfaas.scale.zero": "true",
+			"com.openfaas.scale.min":  "1",
+			"com.openfaas.scale.max":  "1",
+			"instance.idle":           "false",
+		},
+		"constraints": []string{placementLabel},
+	}
+	requestBody, err := json.Marshal(requestData)
+	if err != nil {
+		fmt.Printf("Error marshaling JSON request body: %v", err)
+		return err
+	}
+
+	// 构造要发送的请求
+	req, err := http.NewRequest("POST", gatewayURL+"/system/functions", bytes.NewBuffer(requestBody))
+	if err != nil {
+		fmt.Printf("Error creating HTTP request: %v", err)
+		return err
+	}
+
+	// 设置请求头
+	req.Header.Set("Content-Type", "application/json")
+	user := "admin"
+	password := "admin"
+	req.SetBasicAuth(user, password)
+	// 发送请求并获取响应
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error sending HTTP request: %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	/*
+		//  这里需要debug
+		// 检查响应状态码
+		if resp.StatusCode != http.StatusOK {
+			fmt.Printf("Unexpected response status code: %d", resp.StatusCode)
+		}
+
+		// 解析响应的 JSON 数据
+		var responseMap map[string]interface{}
+		err = json.NewDecoder(resp.Body).Decode(&responseMap)
+		if err != nil {
+			fmt.Printf("Error decoding JSON response body: %v", err)
+			return err
+		}
+	*/
+	fmt.Printf("Function %s deployed, response StatusCode is %d\n", functionName, resp.StatusCode)
+	// fmt.Printf("Function %s deployed successfully\n", functionName)
+	return nil
+}
+
+func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName []string, level int, serviceContainerImage map[int]string) {
+	index := 0
+	nameHash, err := functionNameHash(curSCfunctionName, level)
+	if err != nil {
+		msg := fmt.Sprintf("functionNameHash failed: %s", err.Error())
+		log.Fatal(msg)
+	}
+	i := 0
+	for i < replicaNum {
+		if nameHash[index] == 1 {
+			index = index + 1
+		} else {
+			err := deployFunction(level, index, serviceContainerImage, schedulerRes[i])
+			if err != nil {
+				msg := fmt.Sprintf("deploy function failed: %s", err.Error())
+				log.Fatal(msg)
+			}
+			nameHash[index] = 1
+			index = index + 1
+			i = i + 1
+		}
+	}
+	fmt.Printf("have warmed up %d service-container-%d instance", replicaNum, level)
+}
+func RemoveFunction(level int, rps float64, deltaRps float64, functionName []string, Nodes []types.Node) ([]string, error) {
 
 	return functionName, nil
 }

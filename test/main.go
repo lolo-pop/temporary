@@ -24,7 +24,7 @@ func main() {
 		"image":   imageName,
 		"envVars": map[string]string{
 			"BATCH_SIZE":   "4",
-			"NATS_ADDRESS": "nats://10.244.0.105:4222",
+			"NATS_ADDRESS": "http://nats.openfaas.svc.cluster.local:4222",
 			"NATS_SUBJECT": "image-test",
 			"RESOLUTION":   "512x512",
 		},
@@ -82,7 +82,6 @@ func main() {
 	err = json.NewDecoder(resp.Body).Decode(&responseMap)
 	if err != nil {
 		fmt.Printf("Error decoding JSON response body: %v", err)
-		os.Exit(1)
 	}
 
 	// 输出部署结果

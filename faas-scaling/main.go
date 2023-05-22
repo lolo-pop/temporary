@@ -19,13 +19,21 @@ import (
 )
 
 var (
-	natsUrl        string
-	metricsSubject string
-	reqSubject     string
-	scalingWindows int64
+	natsUrl               string
+	metricsSubject        string
+	reqSubject            string
+	scalingWindows        int64
+	serviceContainerImage map[int]string
 )
 
 func init() {
+	serviceContainerImage = map[int]string{
+		1: "lolopop/service-container-1:latest",
+		2: "lolopop/service-container-2:latest",
+		3: "lolopop/service-container-3:latest",
+		4: "lolopop/service-container-4:latest",
+		5: "lolopop/service-container-5:latest",
+	}
 	var ok bool
 	natsUrl, ok = os.LookupEnv("NATS_URL")
 	if !ok {
@@ -244,8 +252,8 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					schedulerRes, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
-					scaling.WarmupInstace(schedulerRes, serviceContainerName[level])
+					schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
+					scaling.WarmupInstace(schedulerRes, replicaNum, serviceContainerName[level], level, serviceContainerImage)
 					if err != nil {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
@@ -257,7 +265,7 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					result, err := scaling.RemoveFunction(level, lowBound-rps, serviceContainerName[level], metrics.Nodes)
+					result, err := scaling.RemoveFunction(level, lowBound, lowBound-rps, serviceContainerName[level], metrics.Nodes)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
