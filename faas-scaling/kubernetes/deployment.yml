@@ -33,4 +33,8 @@ spec:
             value: "metrics"
           - name: REQ_SUBJECT
             value: "image"
+          - name: REDIS_URL
+            value: "faas-redis-master.openfaas.svc.cluster.local:6379"
+          - name: REDIS_PASS
+            value: "Y7MkRCBORP"
       nodeName: dragonlan05

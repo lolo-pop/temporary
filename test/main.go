@@ -5,87 +5,57 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 )
 
+type Function struct {
+	Name   string            `json:"functionName"`
+	Labels map[string]string `json:"labels"`
+}
+
 func main() {
-	// 创建一个 HTTP 客户端
-	client := &http.Client{Timeout: 10 * time.Second}
+	// 构造函数对象
 
-	// 准备要部署的函数的信息
-	functionName := "new-function"
-	imageName := "lolopop/nats-test:latest"
-	gatewayURL := "http://gateway.openfaas.svc.cluster.local:8080"
-
-	// 构造要发送的请求的 JSON 数据
-	requestData := map[string]interface{}{
-		"service": functionName,
-		"image":   imageName,
-		"envVars": map[string]string{
-			"BATCH_SIZE":   "4",
-			"NATS_ADDRESS": "http://nats.openfaas.svc.cluster.local:4222",
-			"NATS_SUBJECT": "image-test",
-			"RESOLUTION":   "512x512",
-		},
-		"envProcess": "python3 index.py",
-		"limits": map[string]string{
-			"memory": "1024Mi",
-			"cpu":    "1000m",
-		},
-		"request": map[string]string{
-			"memory": "1024Mi",
-			"cpu":    "1000m",
-		},
-		"labels": map[string]string{
-			"com.openfaas.scale.zero": "true",
-			"com.openfaas.scale.min":  "1",
-			"com.openfaas.scale.max":  "1",
-		},
-		"constraints": []string{"kubernetes.io/hostname=dragonlab11"},
+	labels := map[string]string{
+		"com.openfaas.scale.min": "1",
+		"com.openfaas.scale.max": "1",
+		"instance.idle":          "true",
 	}
-
-	requestBody, err := json.Marshal(requestData)
-	fmt.Println(requestBody)
+	f := Function{
+		Name:   "nats-test",
+		Labels: labels,
+	}
+	fun := map[string]interface{}{
+		"service": "nats-test",
+		"image":   "lolopop/nats-test:latest",
+		"labels":  labels,
+	}
+	fmt.Println(f)
+	fmt.Println(fun)
+	// 将对象编码为JSON
+	data, err := json.Marshal(fun)
 	if err != nil {
-		fmt.Printf("Error marshaling JSON request body: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
 
-	// 构造要发送的请求
-	req, err := http.NewRequest("POST", gatewayURL+"/system/functions", bytes.NewBuffer(requestBody))
+	// 调用OpenFaaS API
+	req, err := http.NewRequest("PUT", "http://gateway.openfaas.svc.cluster.local:8080/system/functions", bytes.NewBuffer(data))
 	if err != nil {
-		fmt.Printf("Error creating HTTP request: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
-
-	// 设置请求头
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/json")
 	user := "admin"
 	password := "admin"
 	req.SetBasicAuth(user, password)
-	// 发送请求并获取响应
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error sending HTTP request: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
 	defer resp.Body.Close()
 
-	// 检查响应状态码
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected response status code: %d", resp.StatusCode)
-	}
-
-	// 解析响应的 JSON 数据
-	var responseMap map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&responseMap)
-	if err != nil {
-		fmt.Printf("Error decoding JSON response body: %v", err)
-	}
-
-	// 输出部署结果
-	fmt.Printf("Function %s deployed successfully with URL: %s\n", functionName, responseMap["url"])
+	fmt.Println("Response status:", resp.Status)
+	time.Sleep(time.Second * 10000)
 }
 
 type FunctionDeployment struct {

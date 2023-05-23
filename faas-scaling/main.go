@@ -23,8 +23,15 @@ var (
 	metricsSubject        string
 	reqSubject            string
 	scalingWindows        int64
+	redisUrl              string
+	redisPassword         string
 	serviceContainerImage map[int]string
 )
+
+type SLO struct {
+	Accuracy float64
+	latency  float64
+}
 
 func init() {
 	serviceContainerImage = map[int]string{
@@ -57,6 +64,15 @@ func init() {
 		log.Fatal(err.Error())
 	}
 	scalingWindows = int64(val)
+
+	redisUrl, ok := os.LookupEnv("REDIS_URL")
+	if !ok {
+		log.Fatal("$REDIS_URL not set")
+	}
+	redisPassword, ok := os.LookupEnv("REDIS_PASS")
+	if !ok {
+		log.Fatal("$REDIS_PASS not set")
+	}
 }
 
 /*
@@ -70,10 +86,6 @@ func init() {
 		return 0
 	}
 */
-type SLO struct {
-	Accuracy float64
-	latency  float64
-}
 
 func main() {
 	scaling.Hello("test")
@@ -207,11 +219,12 @@ func main() {
 
 		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
 		serviceContainerName := make(map[int][]string)
+
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 
 			if strings.Contains(functionName, "service") {
-				fields := strings.Split(functionName, "-") // service-1-random
+				fields := strings.Split(functionName, "-") // service-1-num-random
 				accuracyLevel, err := strconv.Atoi(fields[1])
 				if err != nil {
 					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
@@ -235,6 +248,33 @@ func main() {
 				}
 				lowSCRPS[accuracyLevel] += lowRps
 				upSCRPS[accuracyLevel] += upRps
+			}
+		}
+
+		nodesStatus := make(map[string][]types.SCconfig)
+		for _, function := range metrics.Functions {
+			functionName := function.Name
+			if strings.Contains(functionName, "service") {
+				if function.Replicas == 1 {
+					node := function.Nodes[0]
+					cpuResource := function.Cpu
+					bs := 0
+					c := 0.0
+					m := 0.0
+					for podName, cpu := range cpuResource {
+						bs = function.Batch[podName]
+						c = cpu[1]
+						m = function.Mem[podName][1]
+					}
+					var tmp types.SCconfig
+					tmp.Cpu = c
+					tmp.Name = functionName
+					tmp.Mem = m
+					tmp.Bs = bs
+					nodesStatus[node] = append(nodesStatus[node], tmp)
+				} else {
+					fmt.Printf("Error, service container %s have %d replicas", functionName, function.Replicas)
+				}
 			}
 		}
 
@@ -265,12 +305,13 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					result, err := scaling.RemoveFunction(level, lowBound, lowBound-rps, serviceContainerName[level], metrics.Nodes)
+					labelRemoveFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesStatus)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("remove function %s succeeded, remove %v function replicas", serviceContainerName[level], result)
+					log.Printf("level %d function, remove %d function replicas", level, len(labelRemoveFunction))
+					scaling.StoreKeyValue(labelRemoveFunction, redisUrl, redisPassword)
 				}(level, rps)
 				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}

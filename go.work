@@ -7,4 +7,5 @@ use (
 	./faas-netes
 	./faas-scaling
 	./faas-dispatch
+	./test
 )

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/lolo-pop/faas-scaling/pkg/types"
 )
 
@@ -290,7 +291,7 @@ func instancePlacement(alpha float64, nodes []types.Node, level int, config []fl
 	cpu := config[1]
 	mem := config[2]
 	nodes[pI].Cpu[0] = nodes[pI].Cpu[0] + cpu*1000
-	nodes[pI].Mem[0] = nodes[pI].Mem[0] + mem*1000
+	nodes[pI].Mem[0] = nodes[pI].Mem[0] + mem*1024
 	return nodeName, nodes
 }
 
@@ -305,7 +306,7 @@ func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps fl
 	n := 0
 	var schedulerRes []Scheduler
 	for curRps > 0 {
-		feasibleConfig := feasibleSet(cpu, mem, bs, level, rps, SCProfile, LatSLO)
+		feasibleConfig := feasibleSet(cpu, mem, bs, level, curRps, SCProfile, LatSLO)
 		if len(feasibleConfig) == 0 {
 			log.Fatalln("feasible config set is null")
 		} else {
@@ -440,7 +441,80 @@ func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName [
 	}
 	fmt.Printf("have warmed up %d service-container-%d instance", replicaNum, level)
 }
-func RemoveFunction(level int, rps float64, deltaRps float64, functionName []string, Nodes []types.Node) ([]string, error) {
 
-	return functionName, nil
+func MaxUsage(nodes []types.Node, alpha float64) (string, float64) {
+	maxUsage := 0.0
+	maxNode := ""
+	for _, node := range nodes {
+		nodeName := node.Name
+		nodeCpuUsage := node.Cpu[0] / node.Cpu[1]
+		nodeMemUsage := node.Mem[0] / node.Mem[1]
+		usage := nodeCpuUsage*alpha + nodeMemUsage
+		if usage > maxUsage {
+			maxUsage = usage
+			maxNode = nodeName
+		}
+	}
+	return maxNode, maxUsage
+}
+
+func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, nodesStatus map[string][]types.SCconfig) ([]types.SCconfig, error) {
+	var labelRemoveFunction []types.SCconfig
+	for rps > 0 {
+		minResEffi := 1000.0
+		maxNodeName, _ := MaxUsage(nodes, alpha)
+		var minSC types.SCconfig
+		minLowBound := 0.0
+		for _, sc := range nodesStatus[maxNodeName] {
+			m := int(sc.Mem)
+			c := int(sc.Cpu)
+			b := sc.Bs
+			config := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(b)
+			profile := SCProfile[config]
+			execTime := profile[1]
+			// waitTime := float64(b) / rps
+			lowRps := 1 / (LatSLO - execTime) * float64(b)
+			upRps := 1 / execTime * float64(b)
+			lowbound := (upRps-lowRps)*index + lowRps
+			if lowbound/float64(alpha*sc.Cpu+sc.Mem) < minResEffi {
+				minResEffi = lowbound / float64(alpha*sc.Cpu+sc.Mem)
+				minSC.Name = sc.Name
+				minSC.Bs = sc.Bs
+				minSC.Cpu = sc.Cpu
+				minSC.Mem = sc.Mem
+				minLowBound = lowbound
+			}
+		}
+		rps = rps - minLowBound
+
+		// 更新 nodes的资源使用状态
+		for _, node := range nodes {
+			if node.Name == maxNodeName {
+				node.Cpu[0] = node.Cpu[0] - minSC.Cpu*1000
+				node.Mem[0] = node.Mem[0] - minSC.Mem*1024
+			}
+		}
+		labelRemoveFunction = append(labelRemoveFunction, minSC)
+	}
+	return labelRemoveFunction, nil
+}
+
+func StoreKeyValue(key string, labelRemoveFunction []types.SCconfig, redisUrl string, redisPassword string) error {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword, // no password set
+		DB:       0,             // use default DB
+	})
+	defer client.Close()
+	start := time.Now()
+	valueStr, err := client.Get(key).Result()
+	if err != nil {
+		log.Printf("Failed to get value of key %s from Redis: %v", key, err)
+
+	}
+
+	// Split the value into a list of strings
+	value = strings.Split(valueStr, ",")
+	end := time.Since(start)
+	log.Printf("Got key %s with value %v, time %v", key, value, end)
 }
