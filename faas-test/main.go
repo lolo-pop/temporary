@@ -1,8 +1,8 @@
 package main
 
 import (
-	"log"
-	"strings"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -11,51 +11,63 @@ import (
 const redisAddr = "faas-redis-master.openfaas.svc.cluster.local:6379"
 const redisPassword = "Y7MkRCBORP"
 
+type SCconfig struct {
+	Name string  `json:"name"`
+	Bs   int     `json:"batchSize"`
+	Cpu  float64 `json:"cpu"`
+	Mem  float64 `json:"mem"`
+}
+
 func main() {
-	// Connect to Redis
+	// 创建 Redis 客户端
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: redisPassword, // no password set
-		DB:       0,             // use default DB
+		Password: redisPassword, // Redis 无密码
+		DB:       0,             // 使用默认数据库
 	})
-	defer client.Close()
-
-	// Start a goroutine to write key-value pairs
-
-	// Generate a random key and value
-	key := "key1"
-	value := []string{"value1", "value2", "value3"}
-
-	// Set the key-value pair in Redis
-	err := client.Set(key, strings.Join(value, ","), 0).Err()
+	key := "example_key"
+	exists, err := client.Exists(key).Result()
 	if err != nil {
-		log.Printf("Failed to set key-value pair in Redis: %v", err)
+		panic(err)
 	}
 
-	log.Printf("Set key %swith value %v", key, value)
-
-	// Wait for a random amount of time before setting the next key-value pair
-	time.Sleep(time.Duration(1+time.Now().UnixNano()%5) * time.Second)
-
-	// Start a goroutine to read key-value pairs
-
-	for {
-		start := time.Now()
-		valueStr, err := client.Get(key).Result()
-		if err != nil {
-			log.Printf("Failed to get value of key %s from Redis: %v", key, err)
-
-		}
-
-		// Split the value into a list of strings
-		value = strings.Split(valueStr, ",")
-		end := time.Since(start)
-		log.Printf("Got key %s with value %v, time %v", key, value, end)
-
-		// Wait for a random amount of time before getting the next key-value pair
-		time.Sleep(time.Duration(1+time.Now().UnixNano()%5) * time.Second)
-
-		// Wait for the goroutines to finish
+	if exists == 1 {
+		fmt.Printf("键 %s 存在于 Redis 中\n", key)
+	} else {
+		fmt.Printf("键 %s 不存在于 Redis 中\n", key)
 	}
+
+	start := time.Now()
+	// 创建一个 SCconfig 结构体列表
+	configs := []SCconfig{}
+
+	// 将 SCconfig 结构体列表转换为 JSON 字符串
+	configsJSON, err := json.Marshal(configs)
+	if err != nil {
+		panic(err)
+	}
+
+	//将 JSON 字符串作为值存储到 Redis 中
+	err = client.Set("configurations", string(configsJSON), 0).Err()
+	if err != nil {
+		panic(err)
+	}
+	end := time.Since(start)
+	fmt.Printf("set key value, time %v", end)
+	// 从 Redis 中获取值，并将其转换回结构体列表
+	start = time.Now()
+	val, err := client.Get("configurations").Result()
+	if err != nil {
+		panic(err)
+	}
+
+	var configsFromRedis []SCconfig
+	err = json.Unmarshal([]byte(val), &configsFromRedis)
+	if err != nil {
+		panic(err)
+	}
+	end = time.Since(start)
+	// 打印从 Redis 中获取的结构体列表
+	fmt.Println(configsFromRedis, len(configsFromRedis), end)
 
 }

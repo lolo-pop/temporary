@@ -3,7 +3,16 @@ package main
 import "fmt"
 
 func main() {
-	tt := make(map[string][]string)
-	tt["22"] = append(tt["22"], "11")
-	fmt.Println(tt)
+	SCSLO := []float64{}
+	fmt.Println(SCSLO, len(SCSLO))
+}
+
+type SCconfig struct {
+	Name      string  `json:"name"`
+	BatchSize int     `json:"batchSize"`
+	Cpu       float64 `json:"cpu"`
+	Mem       float64 `json:"mem"`
+	//LowRps    float64 `json:"lowRps"`
+	//UpRps     float64 `json:"upRps"`
+	Node string `json:"node"`
 }

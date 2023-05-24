@@ -27,8 +27,11 @@ type Message struct {
 	Timestamp int64      `json:"timestamp"`
 }
 type SCconfig struct {
-	Name string  `json:"name"`
-	Bs   int     `json:"batchSize"`
-	Cpu  float64 `json:"cpu"`
-	Mem  float64 `json:"mem"`
+	Name      string  `json:"name"`
+	BatchSize int     `json:"batchSize"`
+	Cpu       float64 `json:"cpu"`
+	Mem       float64 `json:"mem"`
+	//LowRps    float64 `json:"lowRps"`
+	//UpRps     float64 `json:"upRps"`
+	Node string `json:"node"`
 }
