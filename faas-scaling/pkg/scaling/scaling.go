@@ -281,7 +281,7 @@ func instancePlacement(alpha float64, nodes []types.Node, level int, config []fl
 		capacityCpu := node.Cpu[1]
 		usageMem := node.Mem[0]
 		capacityMem := node.Mem[1]
-		index := alpha*(usageCpu/capacityCpu) + usageMem/capacityMem
+		index := alpha*(usageCpu/capacityCpu) + usageMem/capacityMem // 这里需要添加判定，node的资源能否承载
 		if index < minIndex {
 			pI = i
 			minIndex = index
@@ -300,30 +300,62 @@ type Scheduler struct {
 	config   []float64
 }
 
-func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64) ([]Scheduler, int, error) {
+func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, labeledRemoveFunction []types.SCconfig) ([]types.SCconfig, []Scheduler, int, error) {
 	curRps := rps
 	curNodes := nodes
 	n := 0
 	var schedulerRes []Scheduler
-	for curRps > 0 {
-		feasibleConfig := feasibleSet(cpu, mem, bs, level, curRps, SCProfile, LatSLO)
-		if len(feasibleConfig) == 0 {
-			log.Fatalln("feasible config set is null")
-		} else {
-			_, maxEfficient := resEfficient(alpha, feasibleConfig)
-			n = n + 1
-			instanceRps := maxEfficient.config[4] // upRps
-			curRps = curRps - instanceRps
-			nodeName := ""
-			nodeName, curNodes = instancePlacement(alpha, curNodes, level, maxEfficient.config)
-			schedulerRes = append(schedulerRes, Scheduler{nodeName, maxEfficient.config})
+	tmp := []int{}
+	for curRps > 0 && len(tmp) < len(labeledRemoveFunction) && len(labeledRemoveFunction) > 0 {
+		maxRps := -1.0
+		maxI := 0
+		for i, removeFunction := range labeledRemoveFunction {
+			found := false
+			for _, index := range tmp {
+				if index == i {
+					found = true
+					break
+				}
+			}
+			if found {
+				continue
+			} else {
+				if removeFunction.UpRps > maxRps {
+					maxRps = removeFunction.UpRps
+					maxI = i
+				}
+			}
+		}
+		curRps = curRps - maxRps
+		tmp = append(tmp, maxI)
+	}
+	labeledActiveFunction := []types.SCconfig{}
+	for _, index := range tmp {
+		labeledActiveFunction = append(labeledActiveFunction, labeledRemoveFunction[index])
+	}
+
+	if curRps > 0 {
+		for curRps > 0 {
+			feasibleConfig := feasibleSet(cpu, mem, bs, level, curRps, SCProfile, LatSLO)
+			if len(feasibleConfig) == 0 {
+				log.Fatalln("feasible config set is null")
+			} else {
+				_, maxEfficient := resEfficient(alpha, feasibleConfig)
+				n = n + 1
+				instanceRps := maxEfficient.config[4] // upRps
+				curRps = curRps - instanceRps
+				nodeName := ""
+				nodeName, curNodes = instancePlacement(alpha, curNodes, level, maxEfficient.config)
+				schedulerRes = append(schedulerRes, Scheduler{nodeName, maxEfficient.config})
+			}
 		}
 	}
-	return schedulerRes, n, nil
+
+	return labeledActiveFunction, schedulerRes, n, nil
 }
 
 func functionNameHash(curSCfunctionName []string, level int) ([]int, error) {
-	nameHash := make([]int, 1000)
+	nameHash := make([]int, 10000)
 	for _, item := range curSCfunctionName {
 		indexStr := strings.Split(item, "-")[2]
 		index, err := strconv.Atoi(indexStr)
@@ -441,15 +473,15 @@ func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName [
 			bs := schedulerRes[i].config[0]
 			c := schedulerRes[i].config[1]
 			m := schedulerRes[i].config[2]
-			//lowRps := schedulerRes[i].config[3]
-			//upRps := schedulerRes[i].config[4]
+			lowRps := schedulerRes[i].config[3]
+			upRps := schedulerRes[i].config[4]
 			node := schedulerRes[i].nodeName
 			var config types.SCconfig
 			config.BatchSize = int(bs)
 			config.Cpu = c
 			config.Mem = m
-			//config.LowRps = lowRps
-			//config.UpRps = upRps
+			config.LowRps = lowRps
+			config.UpRps = upRps
 			config.Node = node
 			config.Name = functionName
 			functionInstanceStatus = append(functionInstanceStatus, config)
@@ -475,14 +507,14 @@ func MaxUsage(nodes []types.Node, alpha float64) (string, float64) {
 	return maxNode, maxUsage
 }
 
-func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, nodesStatus map[string][]types.SCconfig) ([]types.SCconfig, error) {
+func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, nodesActiveFunctionStatus map[string][]types.SCconfig) ([]types.SCconfig, error) {
 	var labelRemoveFunction []types.SCconfig
 	for rps > 0 {
 		minResEffi := 1000.0
 		maxNodeName, _ := MaxUsage(nodes, alpha)
 		var minSC types.SCconfig
 		minLowBound := 0.0
-		for _, sc := range nodesStatus[maxNodeName] {
+		for _, sc := range nodesActiveFunctionStatus[maxNodeName] {
 			m := int(sc.Mem)
 			c := int(sc.Cpu)
 			b := sc.BatchSize
@@ -544,54 +576,160 @@ func getRedis(client *redis.Client, key string) ([]types.SCconfig, error) {
 	return value, nil
 }
 
-func StoreFunction(key1 string, key2 string, key3 string, removeFunction []types.SCconfig, warmupFunction []types.SCconfig, redisUrl string, redisPassword string) error {
+func GetSCRemoveFunction(key string, redisUrl string, redisPassword string) ([]types.SCconfig, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisUrl,
 		Password: redisPassword,
 		DB:       0,
 	})
-	exists, err := client.Exists(key2).Result()
+	curRemoveFunction := []types.SCconfig{}
+	exists, err := client.Exists(key).Result()
+	if err != nil {
+		return curRemoveFunction, err
+	}
+	if exists == 1 {
+		curRemoveFunction, err := getRedis(client, key)
+		if err != nil {
+			return curRemoveFunction, err
+		}
+	} else {
+		err := setRedis(client, key, curRemoveFunction)
+		if err != nil {
+			return curRemoveFunction, err
+		}
+	}
+	return curRemoveFunction, nil
+}
+
+func StoreFunctionInWarmup(curRemoveKey string, nextRemoveKey string, WarmupKey string, nextActiveFunction []types.SCconfig, warmupFunction []types.SCconfig, redisUrl string, redisPassword string) error {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+	exists, err := client.Exists(nextRemoveKey).Result()
 	if err != nil {
 		return err
 	}
 	if exists == 1 {
-		curRemoveFunction, err := getRedis(client, key2)
+		curRemoveFunction, err := getRedis(client, curRemoveKey)
 		if err != nil {
-			msg := fmt.Sprintf("get key %s failed: %s", key2, err.Error())
+			msg := fmt.Sprintf("get key %s failed: %s", curRemoveKey, err.Error())
 			log.Fatal(msg)
 			return err
 		}
-		err = setRedis(client, key2, removeFunction)
+		tmp, err := getRedis(client, nextRemoveKey)
 		if err != nil {
-			msg := fmt.Sprintf("set key %s failed: %s", key2, err.Error())
+			msg := fmt.Sprintf("get key %s failed: %s", nextRemoveKey, err.Error())
 			log.Fatal(msg)
 			return err
 		}
-		err = setRedis(client, key1, curRemoveFunction)
+		err = setRedis(client, curRemoveKey, tmp)
 		if err != nil {
-			msg := fmt.Sprintf("set key %s failed: %s", key1, err.Error())
+			msg := fmt.Sprintf("set key %s failed: %s", curRemoveKey, err.Error())
 			log.Fatal(msg)
 			return err
 		}
+		if len(nextActiveFunction) > 0 {
+			nextRemoveFunction := []types.SCconfig{}
+			for _, removefunction := range curRemoveFunction {
+				found := false
+				for _, activefunction := range nextActiveFunction {
+					if activefunction.Name == removefunction.Name {
+						found = true
+						break
+					}
+				}
+				if found {
+					continue
+				} else {
+					nextRemoveFunction = append(nextRemoveFunction, removefunction)
+				}
+			}
+			err := setRedis(client, nextRemoveKey, nextRemoveFunction)
+			if err != nil {
+				msg := fmt.Sprintf("set key %s failed: %s", nextRemoveKey, err.Error())
+				log.Fatal(msg)
+				return err
+			}
+		}
+
 	} else {
-		err := setRedis(client, key2, removeFunction)
+		nextRemoveFunction := []types.SCconfig{}
+		err := setRedis(client, nextRemoveKey, nextRemoveFunction)
 		if err != nil {
-			msg := fmt.Sprintf("set key %s failed: %s", key2, err.Error())
+			msg := fmt.Sprintf("set key %s failed: %s", nextRemoveKey, err.Error())
 			log.Fatal(msg)
 			return err
 		}
-		err = setRedis(client, key1, removeFunction)
+		err = setRedis(client, curRemoveKey, nextRemoveFunction)
 		if err != nil {
-			msg := fmt.Sprintf("set key %s failed: %s", key1, err.Error())
+			msg := fmt.Sprintf("set key %s failed: %s", curRemoveKey, err.Error())
 			log.Fatal(msg)
 			return err
 		}
 	}
-	err = setRedis(client, key3, warmupFunction)
+	err = setRedis(client, WarmupKey, warmupFunction)
 	if err != nil {
-		msg := fmt.Sprintf("set key %s failed: %s", key3, err.Error())
+		msg := fmt.Sprintf("set key %s failed: %s", WarmupKey, err.Error())
 		log.Fatal(msg)
 		return err
+	}
+	return nil
+}
+
+func StoreFunctionInRemove(curRemoveKey string, nextRemoveKey string, WarmupKey string, newRemoveFunction []types.SCconfig, redisUrl string, redisPassword string) error {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+	exists, err := client.Exists(nextRemoveKey).Result()
+	if err != nil {
+		return err
+	}
+	if exists == 1 {
+		tmp, err := getRedis(client, nextRemoveKey)
+		if err != nil {
+			msg := fmt.Sprintf("get key %s failed: %s", nextRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		nextRemoveFunction, err := getRedis(client, curRemoveKey)
+		if err != nil {
+			msg := fmt.Sprintf("get key %s failed: %s", curRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		for _, removeFunction := range newRemoveFunction {
+			nextRemoveFunction = append(nextRemoveFunction, removeFunction)
+		}
+		err = setRedis(client, nextRemoveKey, nextRemoveFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", nextRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		err = setRedis(client, curRemoveKey, tmp)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", curRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+	} else {
+		nextRemoveFunction := []types.SCconfig{}
+		err := setRedis(client, nextRemoveKey, nextRemoveFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", nextRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		err = setRedis(client, curRemoveKey, nextRemoveFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", curRemoveKey, err.Error())
+			log.Fatal(msg)
+			return err
+		}
 	}
 	return nil
 }

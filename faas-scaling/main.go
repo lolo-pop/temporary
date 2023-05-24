@@ -213,72 +213,117 @@ func main() {
 			predictSCRPS[level] += predictFunctionRPS[functionName] //计算SC的RPS的预测值
 		}
 
+		// 获得当前系统内被标记为remove的function信息
+		labeledRemoveFunction := make(map[int][]types.SCconfig) // 从redis中读取到被标记为remove的function的信息
+		for i := 0; i < levelNum; i++ {
+			key := fmt.Sprintf("curRemoveFunction-%d", i)
+			tmp, err := scaling.GetSCRemoveFunction(key, redisUrl, redisPassword)
+			if err != nil {
+				msg := fmt.Sprintf("get key %s failed in GetSCRemoveFunction: %s", key, err.Error())
+				log.Fatal(msg)
+			}
+			labeledRemoveFunction[i] = tmp
+		}
+
 		// 计算当前系统里存在的service container replicas 所能承担的 RPS的上限和下限。
 		// 判断某个function 的资源状况需要先判断 function.Replicas是否为0，如果为0即不存在副本，资源状况也是空的
-
 		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
 		serviceContainerName := make(map[int][]string)
 		upSCRPS := make(map[int]float64)
 		lowSCRPS := make(map[int]float64)
+		nodesActiveFunctionStatus := make(map[string][]types.SCconfig) //每个node存放的没有被标记为remove的service container的具体信息
 		for _, function := range metrics.Functions {
 			functionName := function.Name
-
 			if strings.Contains(functionName, "service") {
 				fields := strings.Split(functionName, "-") // service-1-num-random
 				accuracyLevel, err := strconv.Atoi(fields[1])
+				serviceContainerName[accuracyLevel] = append(serviceContainerName[accuracyLevel], functionName) //这个需要包括 被标记为remove的functionName
 				if err != nil {
 					log.Fatalf("Failed to convert accuracy level to int: %s", fields[1])
 				}
-				lowRps := 0.0
-				upRps := 0.0
-				serviceContainerName[accuracyLevel] = append(serviceContainerName[accuracyLevel], functionName)
-				if function.Replicas == 0 {
-					fmt.Printf("service container %s is not a running replica", functionName)
-				} else {
-					lowRps, err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
-					if err != nil {
-						errMsg := fmt.Sprintf("get low RPS failed: %s", err)
-						log.Fatalf(errMsg)
-					}
-					upRps, err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
-					if err != nil {
-						errMsg := fmt.Sprintf("get up RPS failed: %s", err.Error())
-						log.Fatalf(errMsg)
+				found := false
+				for _, status := range labeledRemoveFunction[accuracyLevel] {
+					if status.Name == functionName {
+						found = true
+						break
 					}
 				}
-				lowSCRPS[accuracyLevel] += lowRps
-				upSCRPS[accuracyLevel] += upRps
-			}
-		}
-
-		nodesStatus := make(map[string][]types.SCconfig) //每个节点存放的service container的具体信息
-		for _, function := range metrics.Functions {
-			functionName := function.Name
-			if strings.Contains(functionName, "service") {
-				if function.Replicas == 1 {
-					node := function.Nodes[0]
-					cpuResource := function.Cpu
-					bs := 0
-					c := 0.0
-					m := 0.0
-					for podName, cpu := range cpuResource {
-						bs = function.Batch[podName]
-						c = cpu[1]
-						m = function.Mem[podName][1]
-					}
-					var tmp types.SCconfig
-					tmp.Cpu = c
-					tmp.Name = functionName
-					tmp.Mem = m
-					tmp.BatchSize = bs
-					tmp.Node = node
-					nodesStatus[node] = append(nodesStatus[node], tmp)
+				if found {
+					continue
 				} else {
-					fmt.Printf("Error, service container %s have %d replicas", functionName, function.Replicas)
+					lowRps := 0.0
+					upRps := 0.0
+
+					if function.Replicas == 0 {
+						fmt.Printf("service container %s do not have a running replica", functionName)
+					} else if function.Replicas == 1 {
+						lowRps, err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
+						if err != nil {
+							errMsg := fmt.Sprintf("get low RPS failed: %s", err)
+							log.Fatalf(errMsg)
+						}
+						upRps, err = scaling.UpRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch)
+						if err != nil {
+							errMsg := fmt.Sprintf("get up RPS failed: %s", err.Error())
+							log.Fatalf(errMsg)
+						}
+
+						// 获得每个node中sc function的信息
+						node := function.Nodes[0]
+						cpuResource := function.Cpu
+						bs := 0
+						c := 0.0
+						m := 0.0
+						for podName, cpu := range cpuResource {
+							bs = function.Batch[podName]
+							c = cpu[1]
+							m = function.Mem[podName][1]
+						}
+						var tmp types.SCconfig
+						tmp.Cpu = c
+						tmp.Name = functionName
+						tmp.Mem = m
+						tmp.BatchSize = bs
+						tmp.Node = node
+						tmp.LowRps = lowRps
+						tmp.UpRps = upRps
+						nodesActiveFunctionStatus[node] = append(nodesActiveFunctionStatus[node], tmp)
+					} else {
+						log.Printf("Error, service container %s have %d replicas\n", functionName, function.Replicas)
+					}
+					lowSCRPS[accuracyLevel] += lowRps
+					upSCRPS[accuracyLevel] += upRps
 				}
 			}
 		}
-
+		/*
+			for _, function := range metrics.Functions {
+				functionName := function.Name
+				if strings.Contains(functionName, "service") {
+					if function.Replicas == 1 {
+						node := function.Nodes[0]
+						cpuResource := function.Cpu
+						bs := 0
+						c := 0.0
+						m := 0.0
+						for podName, cpu := range cpuResource {
+							bs = function.Batch[podName]
+							c = cpu[1]
+							m = function.Mem[podName][1]
+						}
+						var tmp types.SCconfig
+						tmp.Cpu = c
+						tmp.Name = functionName
+						tmp.Mem = m
+						tmp.BatchSize = bs
+						tmp.Node = node
+						nodesStatus[node] = append(nodesStatus[node], tmp)
+					} else {
+						fmt.Printf("Error, service container %s have %d replicas", functionName, function.Replicas)
+					}
+				}
+			}
+		*/
 		//predictSCRPS 和 UpSCRPS的差值
 		index := 0.8
 		bs := []int{1, 2, 4, 8}
@@ -293,7 +338,7 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
+					labeledActiveFunction, schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], labeledRemoveFunction[level])
 					if err != nil {
 						errMsg := fmt.Sprintf("scheduling failed: %s", err.Error())
 						log.Fatalf(errMsg)
@@ -303,8 +348,7 @@ func main() {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					removeFunction := []types.SCconfig{}
-					err = scaling.StoreFunction(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("removeFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), removeFunction, warmupfunction, redisUrl, redisPassword)
+					err = scaling.StoreFunctionInWarmup(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("nextRemoveFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), labeledActiveFunction, warmupfunction, redisUrl, redisPassword)
 					if err != nil {
 						errMsg := fmt.Sprintf("StoreKeyValue failed in warmupfunction, level %d: %s", level, err.Error())
 						log.Fatalf(errMsg)
@@ -317,20 +361,19 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					removeFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesStatus)
+					newRemoveFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesActiveFunctionStatus)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					warmupfunction := []types.SCconfig{}
 
 					// curRemoveFunction-level 存储的是当前windows被标记移出的函数
-					err = scaling.StoreFunction(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("removeFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), removeFunction, warmupfunction, redisUrl, redisPassword)
+					err = scaling.StoreFunctionInRemove(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("nextRemoveFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), newRemoveFunction, redisUrl, redisPassword)
 					if err != nil {
 						errMsg := fmt.Sprintf("StoreKeyValue failed in removefunction, level %d: %s", level, err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("level %d function, remove %d function replicas", level, len(removeFunction))
+					log.Printf("level %d function, remove %d function replicas", level, len(newRemoveFunction))
 				}(level, rps)
 				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}

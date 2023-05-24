@@ -3,8 +3,14 @@ package main
 import "fmt"
 
 func main() {
-	SCSLO := []float64{}
-	fmt.Println(SCSLO, len(SCSLO))
+	t := []int{}
+	b := []int{1, 2, 3, 4, 5, 6, 7, 8}
+	a := 10
+	for a > 0 && len(t) < len(b) {
+		t = append(t, a)
+		a = a - 1
+		fmt.Println(t, a)
+	}
 }
 
 type SCconfig struct {
