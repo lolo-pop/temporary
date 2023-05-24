@@ -98,7 +98,7 @@ func ServiceContainerSLO(SCMap map[int][]int, functionAccuracy map[string]float6
 	levelnum := len(SCMap)
 	minlatency := make([]float64, levelnum)
 	for i := 0; i < levelnum; i++ {
-		minlatency[i] = 0
+		minlatency[i] = 10000
 	}
 	for fname, acc := range functionAccuracy {
 		lat := functionLatency[fname]
@@ -159,7 +159,7 @@ func zfill(str string, width int) string {
 	return str
 }
 func Profile(path string) (map[string][]float64, error) {
-	file, err := os.Open("/home/rongch05/openfaas/faas-scaling/profiling.csv")
+	file, err := os.Open("profiling.csv") //这里的路径需要修改
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func functionNameHash(curSCfunctionName []string, level int) ([]int, error) {
 	return nameHash, nil
 }
 
-func deployFunction(level int, index int, serviceContainerImage map[int]string, functionConfig Scheduler) error {
+func deployFunction(level int, index int, serviceContainerImage map[int]string, functionConfig Scheduler) (string, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	functionName := fmt.Sprintf("service-%d-%d", level, index)
 	imageName := serviceContainerImage[level]
@@ -374,17 +374,16 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 	requestBody, err := json.Marshal(requestData)
 	if err != nil {
 		fmt.Printf("Error marshaling JSON request body: %v", err)
-		return err
+		return functionName, err
 	}
 
 	// 构造要发送的请求
 	req, err := http.NewRequest("POST", gatewayURL+"/system/functions", bytes.NewBuffer(requestBody))
 	if err != nil {
 		fmt.Printf("Error creating HTTP request: %v", err)
-		return err
+		return functionName, err
 	}
 
-	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
 	user := "admin"
 	password := "admin"
@@ -393,7 +392,7 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Error sending HTTP request: %v", err)
-		return err
+		return functionName, err
 	}
 	defer resp.Body.Close()
 
@@ -414,11 +413,12 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 	*/
 	fmt.Printf("Function %s deployed, response StatusCode is %d\n", functionName, resp.StatusCode)
 	// fmt.Printf("Function %s deployed successfully\n", functionName)
-	return nil
+	return functionName, nil
 }
 
-func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName []string, level int, serviceContainerImage map[int]string) {
+func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName []string, level int, serviceContainerImage map[int]string) ([]types.SCconfig, error) {
 	index := 0
+	var functionInstanceStatus []types.SCconfig
 	nameHash, err := functionNameHash(curSCfunctionName, level)
 	if err != nil {
 		msg := fmt.Sprintf("functionNameHash failed: %s", err.Error())
@@ -429,17 +429,34 @@ func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName [
 		if nameHash[index] == 1 {
 			index = index + 1
 		} else {
-			err := deployFunction(level, index, serviceContainerImage, schedulerRes[i])
+			functionName, err := deployFunction(level, index, serviceContainerImage, schedulerRes[i])
 			if err != nil {
 				msg := fmt.Sprintf("deploy function failed: %s", err.Error())
 				log.Fatal(msg)
+				return nil, err
 			}
 			nameHash[index] = 1
 			index = index + 1
 			i = i + 1
+			bs := schedulerRes[i].config[0]
+			c := schedulerRes[i].config[1]
+			m := schedulerRes[i].config[2]
+			//lowRps := schedulerRes[i].config[3]
+			//upRps := schedulerRes[i].config[4]
+			node := schedulerRes[i].nodeName
+			var config types.SCconfig
+			config.BatchSize = int(bs)
+			config.Cpu = c
+			config.Mem = m
+			//config.LowRps = lowRps
+			//config.UpRps = upRps
+			config.Node = node
+			config.Name = functionName
+			functionInstanceStatus = append(functionInstanceStatus, config)
 		}
 	}
 	fmt.Printf("have warmed up %d service-container-%d instance", replicaNum, level)
+	return functionInstanceStatus, nil
 }
 
 func MaxUsage(nodes []types.Node, alpha float64) (string, float64) {
@@ -468,7 +485,7 @@ func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes 
 		for _, sc := range nodesStatus[maxNodeName] {
 			m := int(sc.Mem)
 			c := int(sc.Cpu)
-			b := sc.Bs
+			b := sc.BatchSize
 			config := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(b)
 			profile := SCProfile[config]
 			execTime := profile[1]
@@ -479,9 +496,12 @@ func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes 
 			if lowbound/float64(alpha*sc.Cpu+sc.Mem) < minResEffi {
 				minResEffi = lowbound / float64(alpha*sc.Cpu+sc.Mem)
 				minSC.Name = sc.Name
-				minSC.Bs = sc.Bs
+				minSC.BatchSize = sc.BatchSize
 				minSC.Cpu = sc.Cpu
 				minSC.Mem = sc.Mem
+				//minSC.LowRps = lowRps
+				//minSC.UpRps = upRps
+				minSC.Node = maxNodeName
 				minLowBound = lowbound
 			}
 		}
@@ -499,22 +519,79 @@ func RemoveFunction(index float64, alpha float64, level int, rps float64, nodes 
 	return labelRemoveFunction, nil
 }
 
-func StoreKeyValue(key string, labelRemoveFunction []types.SCconfig, redisUrl string, redisPassword string) error {
+func setRedis(client *redis.Client, key string, value []types.SCconfig) error {
+	configsJSON, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	err = client.Set(key, string(configsJSON), 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getRedis(client *redis.Client, key string) ([]types.SCconfig, error) {
+	val, err := client.Get(key).Result()
+	if err != nil {
+		return nil, err
+	}
+	var value []types.SCconfig
+	err = json.Unmarshal([]byte(val), &value)
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func StoreFunction(key1 string, key2 string, key3 string, removeFunction []types.SCconfig, warmupFunction []types.SCconfig, redisUrl string, redisPassword string) error {
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisUrl,
-		Password: redisPassword, // no password set
-		DB:       0,             // use default DB
+		Password: redisPassword,
+		DB:       0,
 	})
-	defer client.Close()
-	start := time.Now()
-	valueStr, err := client.Get(key).Result()
+	exists, err := client.Exists(key2).Result()
 	if err != nil {
-		log.Printf("Failed to get value of key %s from Redis: %v", key, err)
-
+		return err
 	}
-
-	// Split the value into a list of strings
-	value = strings.Split(valueStr, ",")
-	end := time.Since(start)
-	log.Printf("Got key %s with value %v, time %v", key, value, end)
+	if exists == 1 {
+		curRemoveFunction, err := getRedis(client, key2)
+		if err != nil {
+			msg := fmt.Sprintf("get key %s failed: %s", key2, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		err = setRedis(client, key2, removeFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", key2, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		err = setRedis(client, key1, curRemoveFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", key1, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+	} else {
+		err := setRedis(client, key2, removeFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", key2, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+		err = setRedis(client, key1, removeFunction)
+		if err != nil {
+			msg := fmt.Sprintf("set key %s failed: %s", key1, err.Error())
+			log.Fatal(msg)
+			return err
+		}
+	}
+	err = setRedis(client, key3, warmupFunction)
+	if err != nil {
+		msg := fmt.Sprintf("set key %s failed: %s", key3, err.Error())
+		log.Fatal(msg)
+		return err
+	}
+	return nil
 }

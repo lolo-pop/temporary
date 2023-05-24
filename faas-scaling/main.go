@@ -65,11 +65,11 @@ func init() {
 	}
 	scalingWindows = int64(val)
 
-	redisUrl, ok := os.LookupEnv("REDIS_URL")
+	redisUrl, ok = os.LookupEnv("REDIS_URL")
 	if !ok {
 		log.Fatal("$REDIS_URL not set")
 	}
-	redisPassword, ok := os.LookupEnv("REDIS_PASS")
+	redisPassword, ok = os.LookupEnv("REDIS_PASS")
 	if !ok {
 		log.Fatal("$REDIS_PASS not set")
 	}
@@ -109,12 +109,12 @@ func main() {
 	}
 	functionAccuracy := make(map[string]float64)
 	functionLatency := make(map[string]float64)
-	index := 0
+	indexLevel := 0
 	levelNum := 6
 	profilingPath := "profiling.csv"
 
 	// make(map[string][]float64)  f
-	SCProfile, err := scaling.Profile(profilingPath) // make(map[string][]float64)  key: model 1
+	SCProfile, err := scaling.Profile(profilingPath) // make(map[string][]float64)
 	if err != nil {
 		errMsg := fmt.Sprintf("Cannot parse profiling results: %s", err)
 		log.Fatal(errMsg)
@@ -149,8 +149,7 @@ func main() {
 		// var lowSCRPS map[int]float64              // 当前副本service conatiner 所能承受的最低RPS,
 		// var predictFunctionRPS map[string]float64 // 下一个时间窗口的所有函数的RPS的预测值 functionName: RPS
 		// var predictSCRPS map[int]float64 // 下一个时间窗口的service container的RPS 预测值 accuracyLevel[int]: RPS
-		upSCRPS := make(map[int]float64)
-		lowSCRPS := make(map[int]float64)
+
 		predictFunctionRPS := make(map[string]float64)
 		predictSCRPS := make(map[int]float64)
 		//初始化SC RPS的预测值，所有值为0
@@ -163,13 +162,13 @@ func main() {
 			if strings.Contains(fname, "service") {
 				continue
 			} else if _, ok := functionAccuracy[fname]; !ok {
-				functionAccuracy[fname] = accuracy[index]
-				functionLatency[fname] = latency[index]
-				index += 1
+				functionAccuracy[fname] = accuracy[indexLevel]
+				functionLatency[fname] = latency[indexLevel]
+				indexLevel += 1
 			}
 		}
 		fmt.Println("current function-accuracy configration:", functionAccuracy)
-
+		fmt.Println("current function-latency configration:", functionLatency)
 		// 对所有非service container 按照准确度要求进行排序
 		var sortedFunctionAccuracyMap []scaling.Kv
 		sortedFunctionAccuracyMap = scaling.FunctionAccuracyMapSort(functionAccuracy)
@@ -219,7 +218,8 @@ func main() {
 
 		//每一个准确度level 对应openfaas多个function（service container），为了控制environment，一个SC instance对应一个function
 		serviceContainerName := make(map[int][]string)
-
+		upSCRPS := make(map[int]float64)
+		lowSCRPS := make(map[int]float64)
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 
@@ -251,7 +251,7 @@ func main() {
 			}
 		}
 
-		nodesStatus := make(map[string][]types.SCconfig)
+		nodesStatus := make(map[string][]types.SCconfig) //每个节点存放的service container的具体信息
 		for _, function := range metrics.Functions {
 			functionName := function.Name
 			if strings.Contains(functionName, "service") {
@@ -270,7 +270,8 @@ func main() {
 					tmp.Cpu = c
 					tmp.Name = functionName
 					tmp.Mem = m
-					tmp.Bs = bs
+					tmp.BatchSize = bs
+					tmp.Node = node
 					nodesStatus[node] = append(nodesStatus[node], tmp)
 				} else {
 					fmt.Printf("Error, service container %s have %d replicas", functionName, function.Replicas)
@@ -293,25 +294,43 @@ func main() {
 				go func(level int, rps float64) {
 					defer wg.Done()
 					schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2])
-					scaling.WarmupInstace(schedulerRes, replicaNum, serviceContainerName[level], level, serviceContainerImage)
+					if err != nil {
+						errMsg := fmt.Sprintf("scheduling failed: %s", err.Error())
+						log.Fatalf(errMsg)
+					}
+					warmupfunction, err := scaling.WarmupInstace(schedulerRes, replicaNum, serviceContainerName[level], level, serviceContainerImage)
 					if err != nil {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("warmup function %s succeeded, warmed up %v function replicas", serviceContainerName[level], schedulerRes)
+					removeFunction := []types.SCconfig{}
+					err = scaling.StoreFunction(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("removeFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), removeFunction, warmupfunction, redisUrl, redisPassword)
+					if err != nil {
+						errMsg := fmt.Sprintf("StoreKeyValue failed in warmupfunction, level %d: %s", level, err.Error())
+						log.Fatalf(errMsg)
+					}
+					log.Printf("warmup service-%d function succeeded, warmed up %v function replicas", level, len(warmupfunction))
+
 				}(level, rps)
 				// go scaling.warmupFunction(level, rps-upBound, &wg, &m, serviceContainerName[level])
 			} else if rps < lowBound {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					labelRemoveFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesStatus)
+					removeFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesStatus)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-					log.Printf("level %d function, remove %d function replicas", level, len(labelRemoveFunction))
-					scaling.StoreKeyValue(labelRemoveFunction, redisUrl, redisPassword)
+					warmupfunction := []types.SCconfig{}
+
+					// curRemoveFunction-level 存储的是当前windows被标记移出的函数
+					err = scaling.StoreFunction(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("removeFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), removeFunction, warmupfunction, redisUrl, redisPassword)
+					if err != nil {
+						errMsg := fmt.Sprintf("StoreKeyValue failed in removefunction, level %d: %s", level, err.Error())
+						log.Fatalf(errMsg)
+					}
+					log.Printf("level %d function, remove %d function replicas", level, len(removeFunction))
 				}(level, rps)
 				// go scaling.removeFunction(level, lowBound-rps, &wg, &m, serviceContainerName[level])
 			}
