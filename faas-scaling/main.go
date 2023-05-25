@@ -366,7 +366,6 @@ func main() {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
-
 					// curRemoveFunction-level 存储的是当前windows被标记移出的函数
 					err = scaling.StoreFunctionInRemove(fmt.Sprintf("curRemoveFunction-%d", level), fmt.Sprintf("nextRemoveFunction-%d", level), fmt.Sprintf("warmupFunction-%d", level), newRemoveFunction, redisUrl, redisPassword)
 					if err != nil {
