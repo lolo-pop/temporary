@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"time"
 )
@@ -15,7 +16,7 @@ const (
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	currentRPS := 5
+	currentRPS := 1
 
 	for {
 		for i := 0; i < currentRPS; i++ {
@@ -23,19 +24,34 @@ func main() {
 		}
 		fmt.Println(currentRPS)
 		time.Sleep(20 * time.Second)
-		currentRPS++
 	}
+}
+func getContainerIP() string {
+	// 获取容器内部的IP地址
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	for _, addr := range addrs {
+		ipnet, ok := addr.(*net.IPNet)
+		if ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			return ipnet.IP.String()
+		}
+	}
+	return ""
 }
 
 type image struct {
 	Name string `json:"name"`
+	From string `json:"from"`
 	Data string `json:"data"`
 }
 
 func sendImage(i int, f int) {
 	// imageData := generateRandomImageData()
 	tmp := fmt.Sprintf("image%d-%d.png", i, f)
-	imageData := image{tmp, "image.png"}
+	imageData := image{tmp, getContainerIP(), "image.png"}
 	jsonData, err := json.Marshal(imageData)
 	if err != nil {
 		// 处理错误

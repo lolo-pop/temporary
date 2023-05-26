@@ -8,6 +8,7 @@ import (
 
 type image struct {
 	Name string `json:"name"`
+	From string `json:"from"`
 	Data string `json:"data"`
 }
 
@@ -29,12 +30,12 @@ func processImagesHandler(w http.ResponseWriter, r *http.Request) {
 	// images := bytes.Split(imageBatch, []byte{'\n'})
 	processedImages := processImages(imageBatch)
 	fmt.Printf("prcessed %v", processedImages)
-	//w.Header().Set("Content-Type", "application/octet-stream")
-	//returnData, err := json.Marshal(processedImages)
-	//if err != nil {
-	//	// 处理错误
-	//}
-	//w.Write(returnData)
+	w.Header().Set("Content-Type", "application/json")
+	returnData, err := json.Marshal(processedImages)
+	if err != nil {
+		//	// 处理错误
+	}
+	w.Write(returnData)
 	/*
 		for _, img := range processedImages {
 			w.Write(img)
@@ -49,6 +50,7 @@ func processImages(images []image) []image {
 	fmt.Printf("batch len is %d\n", len(images))
 	fmt.Printf("batch %v\n", images)
 	for _, img := range images {
+		img.Data = "processed"
 		processedImages = append(processedImages, img)
 	}
 	return processedImages

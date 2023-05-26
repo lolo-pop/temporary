@@ -25,3 +25,12 @@ type Message struct {
 	Nodes     []Node     `json:"nodes"`
 	Timestamp int64      `json:"timestamp"`
 }
+type ScConfig struct {
+	Name      string  `json:"name"`
+	BatchSize int     `json:"batchSize"`
+	Cpu       float64 `json:"cpu"`
+	Mem       float64 `json:"mem"`
+	LowRps    float64 `json:"lowRps"`
+	UpRps     float64 `json:"upRps"`
+	Node      string  `json:"node"`
+}
