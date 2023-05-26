@@ -144,6 +144,9 @@ func (d *Dispatcher) sendToService(pics []Image) {
 	result.returnData = returnData
 	d.results <- result
 }
+func (d *Dispatcher) sendToSender(ip string, returnData Image) {
+	url := fmt.Sprintf("http://%s:8082/sendImage", ip)
+}
 
 func (f *FunctionStatus) Init() {
 	i := 0
