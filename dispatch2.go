@@ -89,9 +89,12 @@ func (d *Dispatcher) Start() {
 			d.mutex.Unlock()
 			// timer.Reset(timeout)
 		case result := <-d.results:
-			// fmt.Printf("Received result for batch %s\n", result.returnData)
+			fmt.Printf("Received result for batch %s\n", result.returnData)
 			// TODO: Send result to sender
-
+			for _, returnData := range result.returnData {
+				ip := returnData.From
+				go d.sendToSender(ip, returnData)
+			}
 			// fmt.Printf("Received result for batch %v\n", result)
 			// case <-time.After(500 * time.Millisecond):
 		case <-timer.C:
@@ -129,7 +132,7 @@ func (d *Dispatcher) sendToService(pics []Image) {
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Printf("Batch sent with status: %s\n", resp.Status)
+	//fmt.Printf("Batch sent with status: %s\n", resp.Status)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Error reading response: %s\n", err)
@@ -145,7 +148,18 @@ func (d *Dispatcher) sendToService(pics []Image) {
 	d.results <- result
 }
 func (d *Dispatcher) sendToSender(ip string, returnData Image) {
-	url := fmt.Sprintf("http://%s:8082/sendImage", ip)
+	url := fmt.Sprintf("http://%s:8084/sendResult", ip)
+	jsonData, err := json.Marshal(returnData)
+	if err != nil {
+		fmt.Printf("error marshalling\n")
+	}
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("Error sending result to sender %s: %v\n", ip, err)
+		return
+	}
+	defer resp.Body.Close()
+	//fmt.Printf("Sender %s result sent with status: %s\n", ip, resp.Status)
 }
 
 func (f *FunctionStatus) Init() {
@@ -161,7 +175,7 @@ func main() {
 	status := NewFunctionStatus()
 	go dispatcher.Start()
 	go status.Init()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/sendImage", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
