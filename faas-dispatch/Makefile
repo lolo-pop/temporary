@@ -1,5 +1,5 @@
-BINARY_NAME = faas-scaling
-IMAGE = lolopop/faas-scaling
+BINARY_NAME = faas-dispatch
+IMAGE = lolopop/faas-dispatch
 TAG = latest
 
 publish: docker-build docker-push

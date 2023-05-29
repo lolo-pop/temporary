@@ -91,6 +91,7 @@ func (d *Dispatcher) Start() {
 		case result := <-d.results:
 			fmt.Printf("Received result for batch %s\n", result.returnData)
 			// TODO: Send result to sender
+
 			for _, returnData := range result.returnData {
 				ip := returnData.From
 				go d.sendToSender(ip, returnData)
@@ -194,6 +195,7 @@ func main() {
 		dispatcher.status <- t
 		dispatcher.batches <- batch
 		// fmt.Printf("current results is %v\n", dispatcher.rcvResults)
+		time.Sleep(time.Second * 2)
 	})
 
 	fmt.Println("Listening on port 8082...")

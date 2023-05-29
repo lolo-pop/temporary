@@ -7,3 +7,5 @@ training/predict_models
 training/results
 *.log
 *.txt
+
+function/tftest

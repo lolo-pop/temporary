@@ -6,4 +6,5 @@ RUN go build -o faas-scaling
 FROM alpine
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/lolo-pop/faas-scaling/faas-scaling .
+COPY --from=builder /go/src/github.com/lolo-pop/faas-scaling/profiling.csv .
 CMD ["./faas-scaling"]

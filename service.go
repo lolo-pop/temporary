@@ -53,6 +53,7 @@ func processImages(images []image) []image {
 		img.Data = "processed"
 		processedImages = append(processedImages, img)
 	}
+
 	return processedImages
 }
 

@@ -19,6 +19,7 @@ def predict():
     # Get the monitoring sequence from the request
     data = request.json
     sequence = data['monitoring_sequence']
+    print(data)
     # sequence = sequence.split(',')  
     monitoring_sequence = np.array([float(n) for n in sequence])
     

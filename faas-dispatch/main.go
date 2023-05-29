@@ -8,34 +8,58 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis"
+	"github.com/lolo-pop/faas-dispatch/pkg/types"
 )
 
-var scalingWindows int64
+var (
+	natsUrl       string
+	level         string
+	gatewayURL    string
+	redisUrl      string
+	redisPassword string
+	redisKey      string
+)
 
 func init() {
-	env, ok := os.LookupEnv("SCALING_WINDOWS")
+	var ok bool
+	natsUrl, ok = os.LookupEnv("NATS_URL")
+	if !ok {
+		log.Fatal("$NATS_URL not set")
+	}
+	level, ok = os.LookupEnv("LEVEL")
+	if !ok {
+		log.Fatal("$LEVEL not set")
+	}
+	gatewayURL, ok = os.LookupEnv("GATEWAY_URL")
 	if !ok {
 		log.Fatal("$scaling windows not set")
 	}
-	var err error
-	val, err := strconv.Atoi(env)
-	if err != nil {
-		log.Fatal(err.Error())
+	redisUrl, ok = os.LookupEnv("REDIS_URL")
+	if !ok {
+		log.Fatal("$REDIS_URL not set")
 	}
-	scalingWindows = int64(val)
+	redisPassword, ok = os.LookupEnv("REDIS_PASS")
+	if !ok {
+		log.Fatal("$REDIS_PASS not set")
+	}
+	redisKey, ok = os.LookupEnv("REDIS_KEY")
+	if !ok {
+		log.Fatal("$REDIS_KEY not set")
+	}
 }
 
 const (
-	batchNum = 4                      // 定义每个batch包含的图片数量
-	timeout  = 500 * time.Millisecond // 定义超时时间
+	timeout = 300 * time.Millisecond // 定义超时时间
 )
 
 // 定义一个结构体，用于存储图片数据
 type ImageData struct {
 	Name string `json:"name"`
+	From string `json:"from"`
 	Data []byte `json:"data"`
 }
 
@@ -47,143 +71,230 @@ type BatchData struct {
 // 定义一个结构体，用于存储处理结果
 type ResultData struct {
 	Name   string `json:"name"`
+	To     string `json:"to"`
 	Result string `json:"result"`
 }
-
-// 定义一个channel用于传递batch数据
-var batchChan = make(chan BatchData)
-
-// 定义一个channel用于传递处理结果
-var resultChan = make(chan ResultData)
-
-// 定义一个WaitGroup，用于等待所有goroutine完成
-var wg = sync.WaitGroup{}
-
-// 定义一个函数用于处理batch数据
-func processBatch(batch BatchData) {
-	// 模拟处理时间
-	time.Sleep(5 * time.Second)
-
-	// 构造处理结果
-	result := "processed"
-
-	// 将处理结果发送到resultChan
-	resultChan <- ResultData{Name: batch.Images[0].Name, Result: result}
+type BatchResult struct {
+	resultData []ResultData
 }
 
-// 定义一个函数用于处理请求
-func handleRequest(w http.ResponseWriter, r *http.Request) {
-	// 读取请求体数据
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	// 解析请求体数据为ImageData结构体
-	var imageData ImageData
-	err = json.Unmarshal(body, &imageData)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	// 将ImageData结构体发送到batchChan
-	batchChan <- BatchData{Images: []ImageData{imageData}}
-
-	// 返回响应
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "image received")
+type Dispatcher struct {
+	image    chan ImageData
+	result   chan BatchResult
+	quit     chan bool
+	received []ImageData
+	status   chan Functions
+	mutex    sync.Mutex
 }
 
-// 定义一个函数用于监听batchChan，并将接收到的batch数据发送给另一个容器处理
-func sendBatch() {
-	var images []ImageData
+func NewDispatcher() *Dispatcher {
+	return &Dispatcher{
+		image:    make(chan ImageData), // Buffer up to 10 batches
+		result:   make(chan BatchResult),
+		quit:     make(chan bool),
+		status:   make(chan Functions),
+		received: []ImageData{},
+	}
+}
 
-	//继续：
+type Functions struct {
+	functions []types.ScConfig
+}
+type FunctionStatus struct {
+	Status Functions
+}
 
-	var timeoutTimer *time.Timer
-
+func NewFunctionStatus() *FunctionStatus {
+	return &FunctionStatus{
+		Status: Functions{},
+	}
+}
+func (d *Dispatcher) Start() {
+	fmt.Println("Starting dispatcher...")
+	timeout := time.Millisecond * 500
+	timer := time.NewTimer(timeout)
+	bs := 1
+	index := 0
+	functionNum := 100
+	functionName := ""
 	for {
+		//add 获得batch size代码
 		select {
-		case batch := <-batchChan:
-			images = append(images, batch.Images...)
-			// 如果batch数量达到batchNum或者超时时间到达，就发送batch数据
-			if len(images) == batchNum || timeoutTimer != nil {
-				// 停止超时计时器
-				if timeoutTimer != nil {
-					timeoutTimer.Stop()
-					timeoutTimer = nil
+		case funcStatus := <-d.status: // 这里需要更改
+			// bs = batchSize.BatchSize
+			fmt.Println("batch size:", funcStatus.functions)
+			functionNum = len(funcStatus.functions)
+			if functionNum != 0 {
+				bs = funcStatus.functions[index].BatchSize
+				functionName = funcStatus.functions[index].Name
+			} else {
+				log.Printf("warming functionStatus is empty")
+			}
+		case image := <-d.image:
+			//fmt.Printf("Received image is %v\n", batch)
+			d.mutex.Lock()
+			d.received = append(d.received, image)
+			// Send batch to service if there are enough pictures
+			if len(d.received) == bs {
+				// pics := d.received[:bs]
+				// d.received = d.received[bs:]
+				pics := d.received
+				d.received = []ImageData{}
+				go d.sendToService(functionName, pics)
+				index++
+				if index >= functionNum {
+					index = index % functionNum
 				}
-				// 构造batch数据
-				batchData := BatchData{Images: images}
-				// 将batch数据发送到另一个容器处理
-				go processBatch(batchData)
-				// 重置images
-				images = []ImageData{}
+				timer.Stop()
+				timer.Reset(timeout)
+			} else if !timer.Stop() && len(timer.C) > 0 {
+				fmt.Println("here")
+				<-timer.C
 			}
-		case <-time.After(timeout):
-			// 如果超时时间到达，就发送已接收到的图片数据
-			if len(images) > 0 {
-				// 构造batch数据
-				batchData := BatchData{Images: images}
-				// 将batch数据发送到另一个容器处理
-				go processBatch(batchData)
-				// 重置images
-				images = []ImageData{}
+			d.mutex.Unlock()
+			// timer.Reset(timeout)
+		case result := <-d.result:
+			fmt.Printf("Received result for batch %s\n", result.resultData)
+			// TODO: Send result to sender
+			for _, returnData := range result.resultData {
+				ip := returnData.To
+				go d.sendToSender(ip, returnData)
 			}
-			// 重置超时计时器
-			timeoutTimer = time.NewTimer(timeout)
-			// 等待超时计时器到达
-			<-timeoutTimer.C
-			// 重置timeoutTimer
-			timeoutTimer = nil
+			// fmt.Printf("Received result for batch %v\n", result)
+			// case <-time.After(500 * time.Millisecond):
+		case <-timer.C:
+			if len(d.received) > 0 { // Send remaining pictures to service
+				pics := d.received
+				d.received = []ImageData{}
+				go d.sendToService(functionName, pics)
+				index++
+				if index >= functionNum {
+					index = index % functionNum
+				}
+				//timer.Stop()
+			}
+			timer.Reset(timeout)
+		case <-time.After(500 * time.Millisecond):
+			if len(d.received) > 0 { // Send remaining pictures to service
+				pics := d.received
+				d.received = []ImageData{}
+				go d.sendToService(functionName, pics)
+				if index >= functionNum {
+					index = index % functionNum
+				}
+			}
+		case <-d.quit:
+			fmt.Println("Stopping dispatcher...")
+			return
 		}
 	}
 }
 
-// 定义一个函数用于接收处理结果，并将结果返回给图片发送者
-func handleResult() {
+func (d *Dispatcher) sendToService(functionName string, pics []ImageData) {
+	client := &http.Client{}
+	fmt.Printf("sending %v\n", pics)
+	jsonData, err := json.Marshal(pics)
+	if err != nil {
+		// 处理错误
+	}
+	serviceURL := fmt.Sprintf("%s/function/%s", gatewayURL, functionName)
+	// serviceURL := "http://localhost:8081/processImages"
+	// resp, err := http.Post(serviceURL, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", serviceURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		errMsg := fmt.Sprintf("send to service failed: %s", err.Error())
+		log.Fatal(errMsg)
+	}
+	// 设置请求头
+	req.Header.Set("Content-Type", "application/json")
+	user := "admin"
+	password := "admin"
+	req.SetBasicAuth(user, password)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error sending batch to service: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+	fmt.Printf("Batch sent with status: %d\n", resp.StatusCode)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response: %s\n", err)
+		return
+	}
+	var returnData []ResultData
+	err = json.Unmarshal(body, &returnData)
+	if err != nil {
+	}
+	var result BatchResult
+	result.resultData = returnData
+	d.result <- result
+}
+func (d *Dispatcher) sendToSender(ip string, returnData ResultData) {
+	url := fmt.Sprintf("http://%s:8080/sendResult", ip)
+	jsonData, err := json.Marshal(returnData)
+	if err != nil {
+		fmt.Printf("error marshalling\n")
+	}
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("Error sending result to sender %s: %v\n", ip, err)
+		return
+	}
+	defer resp.Body.Close()
+	//fmt.Printf("Sender %s result sent with status: %s\n", ip, resp.Status)
+}
+
+func (f *FunctionStatus) Init() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+	key := fmt.Sprintf("%s-%s", redisKey, level)
 	for {
-		// 从resultChan接收处理结果
-		result := <-resultChan
-
-		// 模拟处理时间
-		time.Sleep(1 * time.Second)
-
-		// 将处理结果返回给图片发送者
-		client := &http.Client{}
-		payload, err := json.Marshal(result)
+		val, err := client.Get(key).Result()
 		if err != nil {
-			log.Printf("Error marshaling JSON: %s", err)
-			continue
+			log.Printf("get key failed %s", err.Error())
 		}
-		req, err := http.NewRequest("POST", "http://image-sender/result", bytes.NewReader(payload))
+		var value []types.ScConfig
+		err = json.Unmarshal([]byte(val), &value)
 		if err != nil {
-			log.Printf("Error creating HTTP request: %s", err)
-			continue
+			log.Printf("get key failed %s", err.Error())
 		}
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Printf("Error sending HTTP request: %s", err)
-			continue
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("Unexpected status code: %d", resp.StatusCode)
-			continue
-		}
+		f.Status.functions = value
+		log.Printf("active service functions: %v", f.Status.functions)
+		time.Sleep(time.Second)
 	}
 }
 
 func main() {
-	// 启动两个goroutine分别用于监听batchChan和resultChan
-	go sendBatch()
-	go handleResult()
+	dispatcher := NewDispatcher()
+	status := NewFunctionStatus()
+	go dispatcher.Start()
+	go status.Init()
+	time.Sleep(time.Second)
+	http.HandleFunc("/sendImage", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-	// 注册请求处理函数
-	http.HandleFunc("/image", handleRequest)
+		var image ImageData
+		err := json.NewDecoder(r.Body).Decode(&image)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+		// from := batch.From
+		var t Functions
 
-	// 启动HTTP服务器
-	log.Fatal(http.ListenAndServe(":8080", nil))
+		t = status.Status
+		dispatcher.status <- t
+		dispatcher.image <- image
+		// fmt.Printf("current results is %v\n", dispatcher.rcvResults)
+	})
+
+	fmt.Println("Listening on port 8080...")
+	http.ListenAndServe(":8080", nil)
 }

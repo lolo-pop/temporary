@@ -19,16 +19,16 @@ spec:
       containers:
       - name: faas-scaling
         image: lolopop/faas-scaling:latest
-        # imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: SCALING_WINDOWS
             value: "30"
           - name: PROMETHEUS_URL
-            value: "http://10.244.0.110:9090"
+            value: "http://prometheus.openfaas.svc.cluster.local:9090"
           - name: GATEWAY_URL
             value: "http://gateway.openfaas.svc.cluster.local:8080"
           - name: NATS_URL
-            value: "http://10.244.0.105:4222"
+            value: "http://nats.openfaas.svc.cluster.local:4222"
           - name: METRICS_SUBJECT
             value: "metrics"
           - name: REQ_SUBJECT
@@ -37,4 +37,9 @@ spec:
             value: "faas-redis-master.openfaas.svc.cluster.local:6379"
           - name: REDIS_PASS
             value: "Y7MkRCBORP"
+      - name: faas-predict
+        image: lolopop/faas-predict:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 5000
       nodeName: dragonlan05

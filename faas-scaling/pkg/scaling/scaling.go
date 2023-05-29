@@ -122,7 +122,7 @@ func PredictFunctionRPS(functionName string, sequences []float64) (float64, erro
 		FunctionName:       functionName,
 		MonitoringSequence: sequences,
 	}
-
+	log.Printf("sequences in PredictFunctionRPS is %v", sequences)
 	// 将请求数据转换为 JSON 格式
 	requestDataJson, err := json.Marshal(requestData)
 	if err != nil {
@@ -159,7 +159,7 @@ func zfill(str string, width int) string {
 	return str
 }
 func Profile(path string) (map[string][]float64, error) {
-	file, err := os.Open("profiling.csv") //这里的路径需要修改
+	file, err := os.Open(path) //这里的路径需要修改
 	if err != nil {
 		return nil, err
 	}
@@ -728,6 +728,26 @@ func StoreFunctionInRemove(curRemoveKey string, nextRemoveKey string, WarmupKey 
 		if err != nil {
 			msg := fmt.Sprintf("set key %s failed: %s", curRemoveKey, err.Error())
 			log.Fatal(msg)
+			return err
+		}
+	}
+	return nil
+}
+
+func SetActiveFunctons(Functions map[int][]types.SCconfig, keyName string, redisUrl string, redisPassword string) error {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+	for key, value := range Functions {
+		k := fmt.Sprintf("%s-%d", keyName, key)
+		configsJSON, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		err = client.Set(k, string(configsJSON), 0).Err()
+		if err != nil {
 			return err
 		}
 	}

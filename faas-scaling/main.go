@@ -46,14 +46,17 @@ func init() {
 	if !ok {
 		log.Fatal("$NATS_URL not set")
 	}
+	log.Printf("nats url:%s", natsUrl)
 	metricsSubject, ok = os.LookupEnv("METRICS_SUBJECT")
 	if !ok {
 		log.Fatal("$METRICS_SUBJECT not set")
 	}
+	log.Printf("metrics subject:%s", metricsSubject)
 	reqSubject, ok = os.LookupEnv("REQ_SUBJECT")
 	if !ok {
 		log.Fatal("$REQ_SUBJECT not set")
 	}
+	log.Printf("request subject:%s", reqSubject)
 	env, ok := os.LookupEnv("SCALING_WINDOWS")
 	if !ok {
 		log.Fatal("$scaling windows not set")
@@ -64,15 +67,18 @@ func init() {
 		log.Fatal(err.Error())
 	}
 	scalingWindows = int64(val)
+	log.Printf("scaling windows:%d", scalingWindows)
 
 	redisUrl, ok = os.LookupEnv("REDIS_URL")
 	if !ok {
 		log.Fatal("$REDIS_URL not set")
 	}
+	log.Printf("redis url:%s", redisUrl)
 	redisPassword, ok = os.LookupEnv("REDIS_PASS")
 	if !ok {
 		log.Fatal("$REDIS_PASS not set")
 	}
+	log.Printf("redis password:%s", redisPassword)
 }
 
 /*
@@ -120,6 +126,7 @@ func main() {
 		log.Fatal(errMsg)
 	}
 
+	preFunctionRPS := make(map[string][]float64) // 所有函数历史RPS 监测数据 functionName: RPS slice
 	// 连接NATS并订阅metrics subject
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
@@ -134,11 +141,22 @@ func main() {
 	}
 	defer sub.Unsubscribe()
 
-	var preFunctionRPS map[string][]float64 // 所有函数历史RPS 监测数据 functionName: RPS slice
-
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
-		msg, err := sub.NextMsg(0)
+		msg, err := sub.NextMsg(time.Second * 33)
+		if err != nil {
+			errMsg := fmt.Sprintf("Cannot read message: %s", err.Error())
+			log.Fatal(errMsg)
+		}
+		//反序列从NATS获得的metrics
+		var natsMetrics types.Message
+		err = json.Unmarshal(msg.Data, &natsMetrics)
+		if err != nil {
+			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err.Error())
+			log.Fatal(errMsg)
+		}
+		fmt.Printf("Timestamp: %d", natsMetrics.Timestamp)
+
 		var p metrics.Provider
 		p = &metrics.FaasProvider{}
 		functionNames, err := p.Functions()
@@ -179,17 +197,8 @@ func main() {
 		serviceContainerSLO := scaling.ServiceContainerSLO(SCMap, functionAccuracy, functionLatency) //  {level: [acc_low, acc_high, latency]}
 		fmt.Printf("service container SLO: %v\n", serviceContainerSLO)
 
-		//反序列从NATS获得的metrics
-		var metrics types.Message
-		err = json.Unmarshal(msg.Data, &metrics)
-		if err != nil {
-			errMsg := fmt.Sprintf("Cannot unmarshal message: %s", err.Error())
-			log.Fatal(errMsg)
-		}
-		fmt.Printf("Timestamp: %d", metrics.Timestamp)
-
 		// 为每个function预测下一个时间窗口的RPS
-		for _, function := range metrics.Functions {
+		for _, function := range natsMetrics.Functions {
 			functionName := function.Name
 			if strings.Contains(functionName, "service") {
 				continue
@@ -232,7 +241,9 @@ func main() {
 		upSCRPS := make(map[int]float64)
 		lowSCRPS := make(map[int]float64)
 		nodesActiveFunctionStatus := make(map[string][]types.SCconfig) //每个node存放的没有被标记为remove的service container的具体信息
-		for _, function := range metrics.Functions {
+
+		activeFuntionStatus := make(map[int][]types.SCconfig)
+		for _, function := range natsMetrics.Functions {
 			functionName := function.Name
 			if strings.Contains(functionName, "service") {
 				fields := strings.Split(functionName, "-") // service-1-num-random
@@ -288,6 +299,8 @@ func main() {
 						tmp.LowRps = lowRps
 						tmp.UpRps = upRps
 						nodesActiveFunctionStatus[node] = append(nodesActiveFunctionStatus[node], tmp)
+						activeFuntionStatus[accuracyLevel] = append(activeFuntionStatus[accuracyLevel], tmp)
+
 					} else {
 						log.Printf("Error, service container %s have %d replicas\n", functionName, function.Replicas)
 					}
@@ -295,6 +308,12 @@ func main() {
 					upSCRPS[accuracyLevel] += upRps
 				}
 			}
+		}
+		log.Printf("current active service container: %v\n", activeFuntionStatus)
+		err = scaling.SetActiveFunctons(activeFuntionStatus, "activeServiceFunctions", redisUrl, redisPassword)
+		if err != nil {
+			errMsg := fmt.Sprintf("setActiveFunctions failed: %s", err.Error())
+			log.Fatal(errMsg)
 		}
 		/*
 			for _, function := range metrics.Functions {
@@ -325,6 +344,13 @@ func main() {
 			}
 		*/
 		//predictSCRPS 和 UpSCRPS的差值
+
+		log.Printf("predictSCRPS: %v", predictSCRPS)
+		log.Printf("upSCRPS: %v", upSCRPS)
+		log.Printf("lowSCRPS: %v", lowSCRPS)
+		if len(upSCRPS) == 0 || len(lowSCRPS) == 0 {
+			log.Fatalf("cluster may not have any service container")
+		}
 		index := 0.8
 		bs := []int{1, 2, 4, 8}
 		cpu := []int{2, 4, 6, 8, 10, 12, 14, 16}
@@ -338,7 +364,7 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					labeledActiveFunction, schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], labeledRemoveFunction[level])
+					labeledActiveFunction, schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, natsMetrics.Nodes, SCProfile, serviceContainerSLO[level][2], labeledRemoveFunction[level])
 					if err != nil {
 						errMsg := fmt.Sprintf("scheduling failed: %s", err.Error())
 						log.Fatalf(errMsg)
@@ -361,7 +387,7 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					newRemoveFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, metrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesActiveFunctionStatus)
+					newRemoveFunction, err := scaling.RemoveFunction(index, alpha, level, rps-upBound, natsMetrics.Nodes, SCProfile, serviceContainerSLO[level][2], nodesActiveFunctionStatus)
 					if err != nil {
 						errMsg := fmt.Sprintf("removeFunction failed: %s", err.Error())
 						log.Fatalf(errMsg)

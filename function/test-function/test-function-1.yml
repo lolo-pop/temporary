@@ -1,0 +1,21 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  test-function-1:
+    lang: python3-debian
+    handler: ./test-function
+    image: lolopop/test-function:latest
+    imagePullPolicy: IfNotPresent    
+    limits: 
+      cpu: 500m
+      memory: 256Mi
+    requests: 
+      cpu: 500m
+      memory: 256Mi  
+    environment:
+      R_SIZE: "600"
+      C_SIZE: "600"
+
+

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"C"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -30,10 +31,7 @@ func getResults(ch chan<- image) {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
-		// from := batch.From
 		ch <- result
-
-		// fmt.Printf("current results is %v\n", dispatcher.rcvResults)
 		w.WriteHeader(http.StatusOK)
 		go func() {
 			err := server.Shutdown(context.Background())
@@ -44,22 +42,29 @@ func getResults(ch chan<- image) {
 	})
 	server.ListenAndServe()
 }
-func test(i int, f int) {
 
+//export Test
+func Test(i C.int, f C.int) {
+	start := time.Now()
 	ch := make(chan image)
 	go sendImage(0, 1)
 	go getResults(ch)
 	result := <-ch
 	fmt.Println("test", result)
+	end := time.Since(start)
+	fmt.Println(end)
 }
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	bs := 5
-	test(0, bs)
+	// bs := 5
+
+	Test(0, 6)
+
 	return
 }
+
 func getContainerIP() string {
-	// 获取容器内部的IP地址
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		fmt.Println(err)
@@ -81,12 +86,12 @@ type image struct {
 }
 
 func sendImage(i int, f int) {
-	// imageData := generateRandomImageData()
 	tmp := fmt.Sprintf("image%d-%d.png", i, f)
-	imageData := image{tmp, getContainerIP(), "image.png"}
+	ip := getContainerIP()
+	log.Printf("ip:%s", ip)
+	imageData := image{tmp, ip, "image.png"}
 	jsonData, err := json.Marshal(imageData)
 	if err != nil {
-		// 处理错误
 	}
 	resp, err := http.Post(dispatchURL, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
