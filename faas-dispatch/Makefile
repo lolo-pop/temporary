@@ -13,9 +13,11 @@ docker-push:
 install:
 	kubectl apply -f kubernetes/rbac.yml
 	kubectl apply -f kubernetes/deployment.yml
+	kubectl apply -f kubernetes/svc.yml
 uninstall: 
 	kubectl delete -f kubernetes/rbac.yml
 	kubectl delete -f kubernetes/deployment.yml
+	kubectl delete -f kubernetes/svc.yml
 vendor:
 	go mod vendor -v
 

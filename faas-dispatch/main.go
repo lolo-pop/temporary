@@ -60,7 +60,7 @@ const (
 type ImageData struct {
 	Name string `json:"name"`
 	From string `json:"from"`
-	Data []byte `json:"data"`
+	Data string `json:"data"`
 }
 
 // 定义一个结构体，用于存储batch数据
@@ -70,9 +70,9 @@ type BatchData struct {
 
 // 定义一个结构体，用于存储处理结果
 type ResultData struct {
-	Name   string `json:"name"`
-	To     string `json:"to"`
-	Result string `json:"result"`
+	Name string `json:"name"`
+	From string `json:"from"`
+	Data string `json:"data"`
 }
 type BatchResult struct {
 	resultData []ResultData
@@ -116,7 +116,7 @@ func (d *Dispatcher) Start() {
 	bs := 1
 	index := 0
 	functionNum := 100
-	functionName := ""
+	functionName := "service-0-0"
 	for {
 		//add 获得batch size代码
 		select {
@@ -142,7 +142,7 @@ func (d *Dispatcher) Start() {
 				d.received = []ImageData{}
 				go d.sendToService(functionName, pics)
 				index++
-				if index >= functionNum {
+				if index >= functionNum && functionNum != 0 {
 					index = index % functionNum
 				}
 				timer.Stop()
@@ -157,7 +157,7 @@ func (d *Dispatcher) Start() {
 			fmt.Printf("Received result for batch %s\n", result.resultData)
 			// TODO: Send result to sender
 			for _, returnData := range result.resultData {
-				ip := returnData.To
+				ip := returnData.From
 				go d.sendToSender(ip, returnData)
 			}
 			// fmt.Printf("Received result for batch %v\n", result)
@@ -263,7 +263,7 @@ func (f *FunctionStatus) Init() {
 			log.Printf("get key failed %s", err.Error())
 		}
 		f.Status.functions = value
-		log.Printf("active service functions: %v", f.Status.functions)
+		// log.Printf("active service functions: %v", f.Status.functions)
 		time.Sleep(time.Second)
 	}
 }
@@ -279,7 +279,7 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
+		fmt.Println("got one message")
 		var image ImageData
 		err := json.NewDecoder(r.Body).Decode(&image)
 		if err != nil {
@@ -295,6 +295,6 @@ func main() {
 		// fmt.Printf("current results is %v\n", dispatcher.rcvResults)
 	})
 
-	fmt.Println("Listening on port 8080...")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Listening on port 5000...")
+	http.ListenAndServe(":5000", nil)
 }

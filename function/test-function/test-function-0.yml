@@ -17,5 +17,7 @@ functions:
     environment:
       R_SIZE: "600"
       C_SIZE: "600"
-
+    ports:
+      - containerPort: 5001
+        protocol: TCP
 

@@ -734,15 +734,16 @@ func StoreFunctionInRemove(curRemoveKey string, nextRemoveKey string, WarmupKey 
 	return nil
 }
 
-func SetActiveFunctons(Functions map[int][]types.SCconfig, keyName string, redisUrl string, redisPassword string) error {
+func SetActiveFunctons(Functions map[int][]types.SCconfig, keyName string, redisUrl string, redisPassword string, levelNum int) error {
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisUrl,
 		Password: redisPassword,
 		DB:       0,
 	})
-	for key, value := range Functions {
-		k := fmt.Sprintf("%s-%d", keyName, key)
-		configsJSON, err := json.Marshal(value)
+
+	for i := 0; i < levelNum; i++ {
+		k := fmt.Sprintf("%s-%d", keyName, i)
+		configsJSON, err := json.Marshal(Functions[i])
 		if err != nil {
 			return err
 		}
@@ -751,5 +752,18 @@ func SetActiveFunctons(Functions map[int][]types.SCconfig, keyName string, redis
 			return err
 		}
 	}
+	/*
+		for key, value := range Functions {
+			k := fmt.Sprintf("%s-%d", keyName, key)
+			configsJSON, err := json.Marshal(value)
+			if err != nil {
+				return err
+			}
+			err = client.Set(k, string(configsJSON), 0).Err()
+			if err != nil {
+				return err
+			}
+		}
+	*/
 	return nil
 }

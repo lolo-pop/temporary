@@ -310,7 +310,7 @@ func main() {
 			}
 		}
 		log.Printf("current active service container: %v\n", activeFuntionStatus)
-		err = scaling.SetActiveFunctons(activeFuntionStatus, "activeServiceFunctions", redisUrl, redisPassword)
+		err = scaling.SetActiveFunctons(activeFuntionStatus, "activeServiceFunctions", redisUrl, redisPassword, levelNum)
 		if err != nil {
 			errMsg := fmt.Sprintf("setActiveFunctions failed: %s", err.Error())
 			log.Fatal(errMsg)

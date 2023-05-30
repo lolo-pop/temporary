@@ -35,4 +35,7 @@ spec:
             value: "Y7MkRCBORP"
           - name: REDIS_KEY
             value: "activeServiceFunctions"
+        ports:
+        - containerPort: 5000
+          protocol: TCP
       nodeName: dragonlan05

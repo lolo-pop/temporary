@@ -8,7 +8,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 )
 
 func getContainerIP() string {
@@ -45,38 +44,39 @@ type PredictionRequest struct {
 	FunctionName       string    `json:"function_name"`
 	MonitoringSequence []float64 `json:"monitoring_sequence"`
 }
+type ImageData struct {
+	Name string `json:"name"`
+	From string `json:"from"`
+	Data string `json:"data"`
+}
 
 func main() {
-	sequences := []float64{0}
-	requestData := PredictionRequest{
-		FunctionName:       "test",
-		MonitoringSequence: sequences,
-	}
-	log.Printf("sequences in PredictFunctionRPS is %v", sequences)
-	// 将请求数据转换为 JSON 格式
-	requestDataJson, err := json.Marshal(requestData)
+	name := ImageData{"d", "d", "d"}
+	test := []ImageData{name, name}
+	jsonData, err := json.Marshal(test)
 	if err != nil {
 
 	}
-
-	// 发送 POST 请求
-	response, err := http.Post("http://localhost:5000/predict", "application/json", bytes.NewBuffer(requestDataJson))
+	client := &http.Client{}
+	serviceURL := "http://127.0.0.1:8080/function/service-0-0/"
+	// serviceURL := "http://localhost:8081/processImages"
+	// resp, err := http.Post(serviceURL, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", serviceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-
+		errMsg := fmt.Sprintf("send to service failed: %s", err.Error())
+		log.Fatal(errMsg)
 	}
-	defer response.Body.Close()
-
-	// 读取响应主体中的 JSON 字符串
-	body, err := ioutil.ReadAll(response.Body)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
 	if err != nil {
-
+		fmt.Printf("Error sending batch to service: %v\n", err)
+		return
 	}
-	jsonStr := strings.TrimSpace(string(body))
-	fmt.Println(jsonStr)
-	var responseData PredictionResponse
-	err = json.Unmarshal([]byte(string(jsonStr)), &responseData)
+	defer resp.Body.Close()
+	fmt.Printf("Batch sent with status: %d\n", resp.StatusCode)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-
+		fmt.Println("Error:", err)
 	}
-	fmt.Println(responseData.Mean)
+	fmt.Println("Response Body:", string(body))
 }
