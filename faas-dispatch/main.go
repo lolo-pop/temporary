@@ -113,7 +113,7 @@ func (d *Dispatcher) Start() {
 	fmt.Println("Starting dispatcher...")
 	timeout := time.Millisecond * 500
 	timer := time.NewTimer(timeout)
-	bs := 1
+	bs := 2
 	index := 0
 	functionNum := 100
 	functionName := "service-0-0"
@@ -168,21 +168,23 @@ func (d *Dispatcher) Start() {
 				d.received = []ImageData{}
 				go d.sendToService(functionName, pics)
 				index++
-				if index >= functionNum {
+				if index >= functionNum && functionNum != 0 {
 					index = index % functionNum
 				}
-				//timer.Stop()
+				timer.Stop()
 			}
 			timer.Reset(timeout)
-		case <-time.After(500 * time.Millisecond):
+
+		case <-time.After(timeout):
 			if len(d.received) > 0 { // Send remaining pictures to service
 				pics := d.received
 				d.received = []ImageData{}
 				go d.sendToService(functionName, pics)
-				if index >= functionNum {
+				if index >= functionNum && functionNum != 0 {
 					index = index % functionNum
 				}
 			}
+			// timer.Reset(timeout)
 		case <-d.quit:
 			fmt.Println("Stopping dispatcher...")
 			return
@@ -191,6 +193,7 @@ func (d *Dispatcher) Start() {
 }
 
 func (d *Dispatcher) sendToService(functionName string, pics []ImageData) {
+
 	client := &http.Client{}
 	fmt.Printf("sending %v\n", pics)
 	jsonData, err := json.Marshal(pics)
@@ -231,18 +234,32 @@ func (d *Dispatcher) sendToService(functionName string, pics []ImageData) {
 	d.result <- result
 }
 func (d *Dispatcher) sendToSender(ip string, returnData ResultData) {
-	url := fmt.Sprintf("http://%s:8080/sendResult", ip)
-	jsonData, err := json.Marshal(returnData)
-	if err != nil {
-		fmt.Printf("error marshalling\n")
-	}
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	/*
+		url := fmt.Sprintf("http://%s:8080/sendResult", ip)
+		jsonData, err := json.Marshal(returnData)
+		if err != nil {
+			fmt.Printf("error marshalling\n")
+		}
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			fmt.Printf("Error sending result to sender %s: %v\n", ip, err)
+			return
+		}
+		defer resp.Body.Close()
+		//fmt.Printf("Sender %s result sent with status: %s\n", ip, resp.Status)
+	*/
+	key := returnData.Name
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+	err := client.Set(key, "1", 0).Err()
 	if err != nil {
 		fmt.Printf("Error sending result to sender %s: %v\n", ip, err)
 		return
 	}
-	defer resp.Body.Close()
-	//fmt.Printf("Sender %s result sent with status: %s\n", ip, resp.Status)
+	log.Printf("sending %s result to sender %s\n", key, ip)
 }
 
 func (f *FunctionStatus) Init() {

@@ -5,6 +5,9 @@ import base64
 import io
 import ctypes
 import json
+import redis
+import uuid
+
 from urllib.request import Request, urlopen
 from PIL import Image
 import socket
@@ -17,7 +20,8 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',  # 日志格式
 )
 
-dispatch_url = "http://10.244.0.24:5000/sendImage"
+dispatch_url = "http://faas-dispatch.openfaas.svc.cluster.local:5000/sendImage"
+
 
 class image:
     def __init__(self, name, from_, data):
@@ -33,12 +37,12 @@ def get_container_ip():
     ip = socket.gethostbyname(hostname)
     return ip
 
-def send_image(i, f):
-    tmp = f"image{i}.png"
+def send_image(name, ip, data):
+    
     image_data = {
-        "name": tmp,
-        "from": get_container_ip(),
-        "data": tmp
+        "name": name,
+        "from": ip,
+        "data": data
     }
     json_data = json.dumps(image_data)
     req = Request(dispatch_url, json_data.encode(), {"Content-Type": "application/json"}, method='POST')
@@ -47,7 +51,19 @@ def send_image(i, f):
             print(f"Image sent with status: {resp.status}")
     except Exception as e:
         print(f"Error sending image: {e}")
-
+    
+    redis_host = "faas-redis-master.openfaas.svc.cluster.local"
+    redis_port = 6379
+    redis_db = 0
+    redis_password = "Y7MkRCBORP"
+    r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+    while True:
+        if r.exists(name):
+            value = r.get(name)
+            print("received "+name+" results "+str(value))
+            break
+        time.sleep(0.001)
+    
 def sender(num1, num2):
     t1 = time.time()
     lib = ctypes.CDLL('/home/app/function/sender.so')
@@ -71,12 +87,20 @@ def handle(req):
     img = img.convert('RGB')
     resized_img = img.resize((r_size, c_size), Image.LANCZOS)
     t2 = time.time()
-    resized_img.save("1.jpg")
+    data = "image1.jpg"
+    resized_img.save(data)
     t3 = time.time()
     logging.info(f"resize time:"+str(t2 - t1))
     logging.info(f"save image time:"+str(t3-t2))
-    sender(1, 1)
-    # send_image(1, 1)
+    # sender(1, 1)
+    t4 = time.time()
+    uuid_name = uuid.uuid1()
+    name = str(uuid_name)
+    ip = get_container_ip()
+    send_image(name, ip, data)
+    t5 = time.time()
+    logging.info(f"send image time:"+str(t5-t4))
+    logging.info(f"total time:"+str(t5-t1))
     return 'Request received.'
 
 

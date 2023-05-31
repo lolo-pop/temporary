@@ -8,4 +8,4 @@ functions:
     handler: ./test
     image: lolopop/test:latest
     imagePullPolicy: Always  
-
+    replicas: 3

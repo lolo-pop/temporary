@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"sync"
 )
 
 func getContainerIP() string {
@@ -50,7 +51,7 @@ type ImageData struct {
 	Data string `json:"data"`
 }
 
-func main() {
+func test() {
 	name := ImageData{"d", "d", "d"}
 	test := []ImageData{name, name}
 	jsonData, err := json.Marshal(test)
@@ -58,7 +59,7 @@ func main() {
 
 	}
 	client := &http.Client{}
-	serviceURL := "http://127.0.0.1:8080/function/service-0-0/"
+	serviceURL := "http://127.0.0.1:8080/function/test/"
 	// serviceURL := "http://localhost:8081/processImages"
 	// resp, err := http.Post(serviceURL, "application/json", bytes.NewBuffer(jsonData))
 	req, err := http.NewRequest("POST", serviceURL, bytes.NewBuffer(jsonData))
@@ -79,4 +80,16 @@ func main() {
 		fmt.Println("Error:", err)
 	}
 	fmt.Println("Response Body:", string(body))
+}
+func main() {
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			test()
+		}()
+	}
+	wg.Wait()
+	fmt.Println("all goroutines are done")
 }
