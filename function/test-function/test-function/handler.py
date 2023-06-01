@@ -79,6 +79,7 @@ def handle(req):
     # logging.warning('Warning message')
     # logging.error('Error message')
     # logging.critical('Critical message')
+    """
     t1 = time.time()
     # req_data = base64.b64decode(req.encode('utf-8'))
     # image_stream = io.BytesIO(req_data)
@@ -101,6 +102,8 @@ def handle(req):
     t5 = time.time()
     logging.info(f"send image time:"+str(t5-t4))
     logging.info(f"total time:"+str(t5-t1))
+       """
+
     return 'Request received.'
 
 

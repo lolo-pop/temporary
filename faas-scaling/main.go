@@ -35,11 +35,12 @@ type SLO struct {
 
 func init() {
 	serviceContainerImage = map[int]string{
-		1: "lolopop/service-container-1:latest",
-		2: "lolopop/service-container-2:latest",
-		3: "lolopop/service-container-3:latest",
-		4: "lolopop/service-container-4:latest",
-		5: "lolopop/service-container-5:latest",
+		0: "lolopop/service:0",
+		1: "lolopop/service:1",
+		2: "lolopop/service:2",
+		3: "lolopop/service:3",
+		4: "lolopop/service:4",
+		5: "lolopop/service:5",
 	}
 	var ok bool
 	natsUrl, ok = os.LookupEnv("NATS_URL")
@@ -96,22 +97,22 @@ func init() {
 func main() {
 	scaling.Hello("test")
 	rand.Seed(time.Now().UnixNano())
-	accuracy := [20]float64{22.226, 29.066, 29.981, 31.939, 25.687,
-		31.391, 32.991, 26.094, 26.303, 23.245,
-		28.526, 23.302, 28.489, 33.799, 31.171,
-		33.15, 30.037, 24.051, 29.817, 27.067}
-	latency := [20]float64{0.667, 0.901, 0.676, 0.663, 0.822,
-		0.776, 0.720, 0.851, 0.852, 0.662,
-		0.759, 0.839, 0.612, 0.801, 0.790,
-		0.668, 0.654, 0.760, 0.690, 0.853}
+	accuracy := [20]float64{16.226, 18.066, 24.981, 23.939, 31.687,
+		29.391, 31.991, 26.094, 23.303, 21.245,
+		28.526, 17.302, 28.489, 23.799, 31.171,
+		25.15, 17.037, 21.051, 16.817, 20.067}
+	latency := [20]float64{1.5, 2, 3, 2.5, 5,
+		5, 5, 3, 2.5, 2,
+		5, 1.5, 5, 2.5, 5,
+		3, 1.5, 2, 1.5, 2}
 
 	SCMap := map[int][]int{
-		0: []int{22, 24},
-		1: []int{24, 26},
-		2: []int{26, 28},
-		3: []int{28, 30},
-		4: []int{30, 32},
-		5: []int{32, 34},
+		0: []int{0, 18},
+		1: []int{18, 22},
+		2: []int{22, 24},
+		3: []int{24, 28},
+		4: []int{28, 30},
+		5: []int{30, 32},
 	}
 	functionAccuracy := make(map[string]float64)
 	functionLatency := make(map[string]float64)

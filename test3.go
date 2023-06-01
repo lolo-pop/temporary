@@ -59,7 +59,7 @@ func test() {
 
 	}
 	client := &http.Client{}
-	serviceURL := "http://127.0.0.1:8080/function/test/"
+	serviceURL := "http://127.0.0.1:8080/function/test-function-0/"
 	// serviceURL := "http://localhost:8081/processImages"
 	// resp, err := http.Post(serviceURL, "application/json", bytes.NewBuffer(jsonData))
 	req, err := http.NewRequest("POST", serviceURL, bytes.NewBuffer(jsonData))
@@ -83,7 +83,7 @@ func test() {
 }
 func main() {
 	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 9; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

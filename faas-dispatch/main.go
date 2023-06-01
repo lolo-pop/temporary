@@ -280,7 +280,7 @@ func (f *FunctionStatus) Init() {
 			log.Printf("get key failed %s", err.Error())
 		}
 		f.Status.functions = value
-		// log.Printf("active service functions: %v", f.Status.functions)
+		log.Printf("active service functions: %v", f.Status.functions)
 		time.Sleep(time.Second)
 	}
 }

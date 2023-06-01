@@ -9,4 +9,9 @@ training/results
 *.txt
 
 function/tftest
-function/service
+function/service-0
+function/service-1
+function/service-2
+function/service-3
+function/service-4
+function/service-5

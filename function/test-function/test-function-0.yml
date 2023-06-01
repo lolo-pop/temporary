@@ -7,7 +7,12 @@ functions:
     lang: python3-debian
     handler: ./test-function
     image: lolopop/test-function:latest
-    imagePullPolicy: IfNotPresent    
+    imagePullPolicy: IfNotPresent  
+    scale: 2
+    labels: 
+      com.openfaas.scale.min: 1
+      com.openfaas.scale.max: 5
+      com.openfaas.scale.factor: 20
     limits: 
       cpu: 500m
       memory: 256Mi

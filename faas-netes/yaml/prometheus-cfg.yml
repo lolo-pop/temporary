@@ -93,8 +93,8 @@ data:
         - alert: service_down
           expr: up == 0
         - alert: APIHighInvocationRate
-          expr: sum(rate(gateway_function_invocation_total{code="200"}[10s])) BY (function_name) > 5
-          for: 5s
+          expr: sum(rate(gateway_function_invocation_total[5s])) BY (function_name) > 1
+          for: 3s
           labels:
             service: gateway
             severity: major

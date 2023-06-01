@@ -236,13 +236,17 @@ func feasibleSet(cpu []int, mem []int, bs []int, level int, rps float64, SCProfi
 		for _, c := range cpu {
 			for _, m := range mem {
 				config := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(b)
-				profile := SCProfile[config]
-				execTime := profile[1]
-				waitTime := float64(b) / rps
-				lowRps := 1 / (LatSLO - execTime) * float64(b)
-				upRps := 1 / execTime * float64(b)
-				if execTime+waitTime < LatSLO && rps > lowRps {
-					res = append(res, []float64{float64(b), float64(c), float64(m), lowRps, upRps})
+				if _, ok := SCProfile[config]; ok {
+					profile := SCProfile[config]
+					execTime := profile[1]
+					waitTime := float64(b) / rps
+					lowRps := 1 / (LatSLO - execTime) * float64(b)
+					upRps := 1 / execTime * float64(b)
+					if execTime+waitTime < LatSLO && rps > lowRps {
+						res = append(res, []float64{float64(b), float64(c), float64(m), lowRps, upRps})
+					}
+				} else {
+					continue
 				}
 			}
 		}
@@ -391,15 +395,15 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 			"memory": mem,
 			"cpu":    cpu,
 		},
-		"request": map[string]string{
+		"requests": map[string]string{
 			"memory": mem,
 			"cpu":    cpu,
 		},
 		"labels": map[string]string{
-			"com.openfaas.scale.zero": "true",
-			"com.openfaas.scale.min":  "1",
-			"com.openfaas.scale.max":  "1",
-			"instance.idle":           "false",
+			//"com.openfaas.scale.zero": "true",
+			"com.openfaas.scale.min": "1",
+			"com.openfaas.scale.max": "1",
+			"instance.idle":          "false",
 		},
 		"constraints": []string{placementLabel},
 	}

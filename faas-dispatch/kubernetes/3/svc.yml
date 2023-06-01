@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openfaas
+    component: faas-dispatch-3
+  name: faas-dispatch-3
+  namespace: "openfaas"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      protocol: TCP
+  selector:
+    app: faas-dispatch-3

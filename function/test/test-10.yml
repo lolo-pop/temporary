@@ -1,0 +1,26 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  test-10:
+    lang: python3-http-debian
+    handler: ./test
+    image: lolopop/test:latest
+    imagePullPolicy: Always  
+    scale: 2
+    labels: 
+      com.openfaas.scale.min: "1"
+      com.openfaas.scale.max: "5"
+      com.openfaas.scale.factor: "2"
+    limits: 
+      cpu: 1000m
+      memory: 256Mi
+    requests: 
+      cpu: 1000m
+      memory: 256Mi  
+    environment:
+      R_SIZE: "600"
+      C_SIZE: "600"
+      latency: 5.0
+      accuracy: 28.526
