@@ -97,15 +97,17 @@ func init() {
 func main() {
 	scaling.Hello("test")
 	rand.Seed(time.Now().UnixNano())
-	accuracy := [20]float64{16.226, 18.066, 24.981, 23.939, 31.687,
-		29.391, 31.991, 26.094, 23.303, 21.245,
-		28.526, 17.302, 28.489, 23.799, 31.171,
-		25.15, 17.037, 21.051, 16.817, 20.067}
-	latency := [20]float64{1.5, 2, 3, 2.5, 5,
-		5, 5, 3, 2.5, 2,
-		5, 1.5, 5, 2.5, 5,
-		3, 1.5, 2, 1.5, 2}
-
+	/*
+		accuracy := [20]float64{16.226, 18.066, 24.981, 23.939, 31.687,
+			29.391, 31.991, 26.094, 23.303, 21.245,
+			28.526, 17.302, 28.489, 23.799, 31.171,
+			25.15, 17.037, 21.051, 16.817, 20.067}
+		latency := [20]float64{1.5, 2, 3, 2.5, 5,
+			5, 5, 3, 2.5, 2,
+			5, 1.5, 5, 2.5, 5,
+			3, 1.5, 2, 1.5, 2}
+		indexLevel := 0
+	*/
 	SCMap := map[int][]int{
 		0: []int{0, 18},
 		1: []int{18, 22},
@@ -116,7 +118,7 @@ func main() {
 	}
 	functionAccuracy := make(map[string]float64)
 	functionLatency := make(map[string]float64)
-	indexLevel := 0
+
 	levelNum := 6
 	profilingPath := "profiling.csv"
 
@@ -144,7 +146,7 @@ func main() {
 
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
-		msg, err := sub.NextMsg(time.Second * 33)
+		msg, err := sub.NextMsg(time.Second * 40)
 		if err != nil {
 			errMsg := fmt.Sprintf("Cannot read message: %s", err.Error())
 			log.Fatal(errMsg)
@@ -181,9 +183,14 @@ func main() {
 			if strings.Contains(fname, "service") {
 				continue
 			} else if _, ok := functionAccuracy[fname]; !ok {
-				functionAccuracy[fname] = accuracy[indexLevel]
-				functionLatency[fname] = latency[indexLevel]
-				indexLevel += 1
+
+				slo, err := scaling.GetFunctionSLO(fname, redisUrl, redisPassword)
+				if err != nil {
+					errMsg := fmt.Sprintf("get %s function SLO failed: %s", fname, err.Error())
+					log.Fatal(errMsg)
+				}
+				functionAccuracy[fname] = slo["accuracy"]
+				functionLatency[fname] = slo["latency"]
 			}
 		}
 		fmt.Println("current function-accuracy configration:", functionAccuracy)
@@ -206,7 +213,11 @@ func main() {
 			}
 			if _, ok := preFunctionRPS[functionName]; ok {
 				preFunctionRPS[functionName] = append(preFunctionRPS[functionName], function.InvocationRate)
-				fmt.Printf("current RPS monitor sequence of function %s: %v", functionName, preFunctionRPS[functionName]) //输出list可能会出错，需要主语 debug
+				if len(preFunctionRPS[functionName]) > 10 {
+					fmt.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName][len(preFunctionRPS[functionName])-10:]) //输出list可能会出错，需要主语 debug
+				} else {
+					fmt.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName])
+				}
 			} else {
 				preFunctionRPS[functionName] = []float64{function.InvocationRate}
 			}
@@ -353,9 +364,9 @@ func main() {
 			log.Fatalf("cluster may not have any service container")
 		}
 		index := 0.8
-		bs := []int{1, 2, 4, 8}
-		cpu := []int{2, 4, 6, 8, 10, 12, 14, 16}
-		mem := []int{256, 512, 1024, 2048, 4096, 6144, 8192}
+		bs := []int{1, 2, 4, 6, 8}
+		cpu := []int{1, 2, 4, 6, 8}
+		mem := []int{1024, 4096, 6144}
 		alpha := float64(128 / 30)
 		var wg sync.WaitGroup
 		for level, rps := range predictSCRPS {

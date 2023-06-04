@@ -122,7 +122,7 @@ func PredictFunctionRPS(functionName string, sequences []float64) (float64, erro
 		FunctionName:       functionName,
 		MonitoringSequence: sequences,
 	}
-	log.Printf("sequences in PredictFunctionRPS is %v", sequences)
+	// log.Printf("sequences in PredictFunctionRPS is %v", sequences)
 	// 将请求数据转换为 JSON 格式
 	requestDataJson, err := json.Marshal(requestData)
 	if err != nil {
@@ -209,7 +209,10 @@ func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64,
 		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
 		log.Printf("config is %s in lowRPS function:", config)
 		latency := SCProfile[config][1]
-		rps := 1 / (LatSLO - latency) * float64(batchSize)
+		config_1 := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(1)
+		latency_1 := SCProfile[config_1][1]
+		// rps := 1 / (LatSLO - latency) * float64(batchSize)
+		rps := 1 / (LatSLO - latency + latency_1) * 1
 		totalRPS += rps
 	}
 	return totalRPS, nil
@@ -218,7 +221,7 @@ func LowRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64,
 func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, mem map[string][]float64, batch map[string]int) (float64, error) {
 	totalRPS := 0.0
 	for podName := range cpu {
-		cpuLimits := int(cpu[podName][1] / 1024)
+		cpuLimits := int(cpu[podName][1] / 1000)
 		memLimits := int(mem[podName][1] / 1024 / 1024)
 		batchSize := int(batch[podName])
 		config := strconv.Itoa(level) + zfill(strconv.Itoa(memLimits), 4) + zfill(strconv.Itoa(cpuLimits), 2) + strconv.Itoa(batchSize)
@@ -377,7 +380,7 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 	imageName := serviceContainerImage[level]
 	node := functionConfig.nodeName
 	batchSize := strconv.Itoa(int(functionConfig.config[0]))
-	cpu := strconv.Itoa(int(functionConfig.config[1])) + "m"
+	cpu := strconv.Itoa(int(functionConfig.config[1])*1000) + "m"
 	mem := strconv.Itoa(int(functionConfig.config[2])) + "Mi"
 	placementLabel := fmt.Sprintf("kubernetes.io/hostname=%s", node)
 	gatewayURL := "http://gateway.openfaas.svc.cluster.local:8080"
@@ -400,10 +403,10 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 			"cpu":    cpu,
 		},
 		"labels": map[string]string{
-			//"com.openfaas.scale.zero": "true",
-			"com.openfaas.scale.min": "1",
-			"com.openfaas.scale.max": "1",
-			"instance.idle":          "false",
+			"com.openfaas.scale.zero": "true",
+			"com.openfaas.scale.min":  "1",
+			"com.openfaas.scale.max":  "1",
+			"instance.idle":           "false",
 		},
 		"constraints": []string{placementLabel},
 	}
@@ -770,4 +773,22 @@ func SetActiveFunctons(Functions map[int][]types.SCconfig, keyName string, redis
 		}
 	*/
 	return nil
+}
+func GetFunctionSLO(functionName string, redisUrl string, redisPassword string) (map[string]float64, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: redisPassword,
+		DB:       0,
+	})
+
+	val, err := client.Get(functionName).Result()
+	if err != nil {
+		return nil, err
+	}
+	var value map[string]float64
+	err = json.Unmarshal([]byte(val), &value)
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
 }

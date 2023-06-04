@@ -20,7 +20,8 @@ functions:
       cpu: 1000m
       memory: 256Mi  
     environment:
-      R_SIZE: "600"
-      C_SIZE: "600"
+      R_SIZE: 600
+      C_SIZE: 600
       latency: 2.0
       accuracy: 18.066
+      name: test-1

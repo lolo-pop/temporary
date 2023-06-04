@@ -10,18 +10,19 @@ functions:
     imagePullPolicy: Always  
     scale: 2
     labels: 
-      com.openfaas.scale.min: 1
-      com.openfaas.scale.max: 5
+      com.openfaas.scale.min: 5
+      com.openfaas.scale.max: 10
       com.openfaas.scale.factor: 20
     limits: 
       cpu: 1000m
-      memory: 256Mi
+      memory: 1024Mi
     requests: 
       cpu: 1000m
-      memory: 256Mi  
+      memory: 1024Mi  
     environment:
-      R_SIZE: "600"
-      C_SIZE: "600"
+      R_SIZE: 600
+      C_SIZE: 600
       latency: 1.5
       accuracy: 16.226
+      name: test-0
       

@@ -34,7 +34,7 @@ func main() {
 	p = &metrics.FaasProvider{}
 
 	for {
-
+		start := time.Now()
 		var functions []types.Function
 		var nodes []types.Node
 
@@ -135,8 +135,8 @@ func main() {
 		}
 
 		nats.Publish(jsonMsg)
-
-		time.Sleep(time.Duration(scrapePeriod) * time.Second)
+		end := time.Since(start)
+		time.Sleep(time.Duration(scrapePeriod)*time.Second - end)
 	}
 }
 

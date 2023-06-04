@@ -180,6 +180,7 @@ func (d *Dispatcher) Start() {
 				pics := d.received
 				d.received = []ImageData{}
 				go d.sendToService(functionName, pics)
+				index++
 				if index >= functionNum && functionNum != 0 {
 					index = index % functionNum
 				}
