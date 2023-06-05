@@ -8,7 +8,7 @@ with open('profiling.csv', 'r') as csvfile:
 # 将第一列的所有值减1
 for i in range(len(rows)):
   if i != 0:
-    rows[i][5] = str(float(rows[i][5]) + 0.15)
+    rows[i][5] = str(float(rows[i][5])*1.1)
 
 # 将修改后的数据写回原始文件中
 with open('your_file.csv', 'w', newline='') as csvfile:

@@ -10,9 +10,10 @@ functions:
     imagePullPolicy: Always  
     scale: 2
     labels: 
-      com.openfaas.scale.min: "1"
-      com.openfaas.scale.max: "5"
-      com.openfaas.scale.factor: "20"
+      com.openfaas.scale.min: 5
+      com.openfaas.scale.max: 20
+      com.openfaas.scale.factor: 20
+      # com.openfaas.scale.zero: true
     limits: 
       cpu: 1000m
       memory: 256Mi

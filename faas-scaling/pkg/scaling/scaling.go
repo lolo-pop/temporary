@@ -148,7 +148,7 @@ func PredictFunctionRPS(functionName string, sequences []float64) (float64, erro
 	if err != nil {
 		return 0, err
 	}
-	return responseData.Mean, nil
+	return responseData.Quantile09, nil
 }
 
 func zfill(str string, width int) string {
@@ -233,19 +233,27 @@ func UpRPS(SCProfile map[string][]float64, level int, cpu map[string][]float64, 
 	return totalRPS, nil
 }
 
-func feasibleSet(cpu []int, mem []int, bs []int, level int, rps float64, SCProfile map[string][]float64, LatSLO float64) [][]float64 {
+func feasibleSet(cpu []int, mem []int, bs []int, level int, rps float64, deltaRps float64, SCProfile map[string][]float64, LatSLO float64) [][]float64 {
 	var res [][]float64
 	for _, b := range bs {
 		for _, c := range cpu {
 			for _, m := range mem {
 				config := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(b)
 				if _, ok := SCProfile[config]; ok {
+					log.Printf("feasibleSet config is %s", config)
 					profile := SCProfile[config]
 					execTime := profile[1]
 					waitTime := float64(b) / rps
-					lowRps := 1 / (LatSLO - execTime) * float64(b)
+					// lowRps := 1 / (LatSLO - execTime) * float64(b)
+					config_1 := strconv.Itoa(level) + zfill(strconv.Itoa(m), 4) + zfill(strconv.Itoa(c), 2) + strconv.Itoa(1)
+					latency_1 := SCProfile[config_1][1]
+					// rps := 1 / (LatSLO - latency) * float64(batchSize)
+					lowRps := 1 / (LatSLO - execTime + latency_1) * 1
+
 					upRps := 1 / execTime * float64(b)
-					if execTime+waitTime < LatSLO && rps > lowRps {
+					log.Printf("feasibleSet config is %s, low %f, up %f", config, lowRps, upRps)
+					log.Printf("feasibleSet config is %f, %f", execTime+waitTime, LatSLO)
+					if execTime+waitTime < LatSLO {
 						res = append(res, []float64{float64(b), float64(c), float64(m), lowRps, upRps})
 					}
 				} else {
@@ -307,8 +315,8 @@ type Scheduler struct {
 	config   []float64
 }
 
-func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, labeledRemoveFunction []types.SCconfig) ([]types.SCconfig, []Scheduler, int, error) {
-	curRps := rps
+func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps float64, delataRps float64, nodes []types.Node, SCProfile map[string][]float64, LatSLO float64, labeledRemoveFunction []types.SCconfig) ([]types.SCconfig, []Scheduler, int, error) {
+	curRps := delataRps
 	curNodes := nodes
 	n := 0
 	var schedulerRes []Scheduler
@@ -343,9 +351,10 @@ func Scheduling(alpha float64, cpu []int, mem []int, bs []int, level int, rps fl
 
 	if curRps > 0 {
 		for curRps > 0 {
-			feasibleConfig := feasibleSet(cpu, mem, bs, level, curRps, SCProfile, LatSLO)
+			feasibleConfig := feasibleSet(cpu, mem, bs, level, rps, curRps, SCProfile, LatSLO)
 			if len(feasibleConfig) == 0 {
-				log.Fatalln("feasible config set is null")
+				log.Println("feasible config set is null")
+				break
 			} else {
 				_, maxEfficient := resEfficient(alpha, feasibleConfig)
 				n = n + 1
@@ -378,6 +387,15 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 	client := &http.Client{Timeout: 10 * time.Second}
 	functionName := fmt.Sprintf("service-%d-%d", level, index)
 	imageName := serviceContainerImage[level]
+	modelMap := map[int]string{
+		0: "ssd_mobilenet_v1_0.75_depth_300x300_coco14_sync_2018_07_03",
+		1: "ssdlite_mobilenet_v2_coco_2018_05_09",
+		2: "ssd_inception_v2_coco_2018_01_28",
+		3: "faster_rcnn_inception_v2_coco_2018_01_28",
+		4: "rfcn_resnet101_coco_2018_01_28",
+		5: "faster_rcnn_resnet101_coco_2018_01_28",
+	}
+	modelName := modelMap[level]
 	node := functionConfig.nodeName
 	batchSize := strconv.Itoa(int(functionConfig.config[0]))
 	cpu := strconv.Itoa(int(functionConfig.config[1])*1000) + "m"
@@ -388,10 +406,10 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 		"service": functionName,
 		"image":   imageName,
 		"envVars": map[string]string{
-			"BATCH_SIZE":   batchSize,
-			"NATS_ADDRESS": "http://nats.openfaas.svc.cluster.local:4222",
-			"NATS_SUBJECT": "image-test",
-			"RESOLUTION":   "512x512",
+			"BATCH_SIZE": batchSize,
+			"R_SIZE":     "600",
+			"C_SIZE":     "600",
+			"MODEL_NAME": modelName,
 		},
 		"envProcess": "python3 index.py",
 		"limits": map[string]string{
@@ -403,10 +421,10 @@ func deployFunction(level int, index int, serviceContainerImage map[int]string, 
 			"cpu":    cpu,
 		},
 		"labels": map[string]string{
-			"com.openfaas.scale.zero": "true",
-			"com.openfaas.scale.min":  "1",
-			"com.openfaas.scale.max":  "1",
-			"instance.idle":           "false",
+			// "com.openfaas.scale.zero": "true",
+			"com.openfaas.scale.min": "1",
+			"com.openfaas.scale.max": "1",
+			"instance.idle":          "false",
 		},
 		"constraints": []string{placementLabel},
 	}
@@ -476,7 +494,6 @@ func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName [
 			}
 			nameHash[index] = 1
 			index = index + 1
-			i = i + 1
 			bs := schedulerRes[i].config[0]
 			c := schedulerRes[i].config[1]
 			m := schedulerRes[i].config[2]
@@ -492,6 +509,7 @@ func WarmupInstace(schedulerRes []Scheduler, replicaNum int, curSCfunctionName [
 			config.Node = node
 			config.Name = functionName
 			functionInstanceStatus = append(functionInstanceStatus, config)
+			i = i + 1
 		}
 	}
 	fmt.Printf("have warmed up %d service-container-%d instance", replicaNum, level)

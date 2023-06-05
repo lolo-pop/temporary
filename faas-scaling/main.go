@@ -146,7 +146,7 @@ func main() {
 
 	// accuracy 和function name的对应关系需要确定是否是固定的。
 	for {
-		msg, err := sub.NextMsg(time.Second * 40)
+		msg, err := sub.NextMsg(time.Second * 100)
 		if err != nil {
 			errMsg := fmt.Sprintf("Cannot read message: %s", err.Error())
 			log.Fatal(errMsg)
@@ -213,10 +213,10 @@ func main() {
 			}
 			if _, ok := preFunctionRPS[functionName]; ok {
 				preFunctionRPS[functionName] = append(preFunctionRPS[functionName], function.InvocationRate)
-				if len(preFunctionRPS[functionName]) > 10 {
-					fmt.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName][len(preFunctionRPS[functionName])-10:]) //输出list可能会出错，需要主语 debug
+				if len(preFunctionRPS[functionName]) > 20 {
+					log.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName][len(preFunctionRPS[functionName])-20:]) //输出list可能会出错，需要主语 debug
 				} else {
-					fmt.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName])
+					log.Printf("current RPS monitor sequence of function %s: %v\n", functionName, preFunctionRPS[functionName])
 				}
 			} else {
 				preFunctionRPS[functionName] = []float64{function.InvocationRate}
@@ -278,7 +278,7 @@ func main() {
 					upRps := 0.0
 
 					if function.Replicas == 0 {
-						fmt.Printf("service container %s do not have a running replica", functionName)
+						log.Printf("service container %s do not have a running replica", functionName)
 					} else if function.Replicas == 1 {
 						lowRps, err = scaling.LowRPS(SCProfile, accuracyLevel, function.Cpu, function.Mem, function.Batch, serviceContainerSLO[accuracyLevel][2])
 						if err != nil {
@@ -366,8 +366,8 @@ func main() {
 		index := 0.8
 		bs := []int{1, 2, 4, 6, 8}
 		cpu := []int{1, 2, 4, 6, 8}
-		mem := []int{1024, 4096, 6144}
-		alpha := float64(128 / 30)
+		mem := []int{4096, 6144, 8192}
+		alpha := float64(440 / 80)
 		var wg sync.WaitGroup
 		for level, rps := range predictSCRPS {
 			lowBound := (upSCRPS[level]-lowSCRPS[level])*index + lowSCRPS[level]
@@ -376,11 +376,12 @@ func main() {
 				wg.Add(1)
 				go func(level int, rps float64) {
 					defer wg.Done()
-					labeledActiveFunction, schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps-upBound, natsMetrics.Nodes, SCProfile, serviceContainerSLO[level][2], labeledRemoveFunction[level])
+					labeledActiveFunction, schedulerRes, replicaNum, err := scaling.Scheduling(alpha, cpu, mem, bs, level, rps, rps-upBound, natsMetrics.Nodes, SCProfile, serviceContainerSLO[level][2], labeledRemoveFunction[level])
 					if err != nil {
 						errMsg := fmt.Sprintf("scheduling failed: %s", err.Error())
 						log.Fatalf(errMsg)
 					}
+					log.Printf("warmup %d instance config: %v\n", replicaNum, schedulerRes)
 					warmupfunction, err := scaling.WarmupInstace(schedulerRes, replicaNum, serviceContainerName[level], level, serviceContainerImage)
 					if err != nil {
 						errMsg := fmt.Sprintf("warmupFunction failed: %s", err.Error())

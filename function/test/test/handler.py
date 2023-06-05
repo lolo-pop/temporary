@@ -1,5 +1,6 @@
-import os
 import time
+start = time.time()
+import os
 import base64
 import io
 import ctypes
@@ -48,6 +49,7 @@ slo = {
 r = redis.Redis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
 json_data = json.dumps(slo)
 r.set(functionName, json_data)
+end = time.time()
 
 def get_container_ip():
     hostname = socket.gethostname()
@@ -98,7 +100,7 @@ def handle(event, context):
     ip = get_container_ip()
     send_image(name, ip, data)
     t5 = time.time()
-    json_data = f"resize time: {t2 - t1}\nsave image time:{t3-t2}\nsend image time:{t5-t4}\ntotal time:{t5-t1}"
+    json_data = f"resize time: {t2 - t1}\nsave image time:{t3-t2}\nsend image time:{t5-t4}\ntotal time:{t5-t1}\ninit time:{end-start}"
     return {
         "statusCode": 200,
         "body": json_data

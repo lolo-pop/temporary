@@ -136,7 +136,7 @@ func main() {
 
 		nats.Publish(jsonMsg)
 		end := time.Since(start)
-		time.Sleep(time.Duration(scrapePeriod)*time.Second - end)
+		time.Sleep(time.Second*60 - end)
 	}
 }
 

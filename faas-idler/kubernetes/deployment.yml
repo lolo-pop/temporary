@@ -22,7 +22,7 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
           - name: INACTIVITY_DURATION
-            value: "300" # 5 minutes
+            value: "120" # 5 minutes
           - name: RECONCILE_INTERVAL
             value: "60"
           - name: PROMETHEUS_URL

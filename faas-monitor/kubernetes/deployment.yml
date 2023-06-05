@@ -22,7 +22,7 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
           - name: SCRAPE_PERIOD
-            value: "30"
+            value: "60"
           - name: PROMETHEUS_URL
             value: "http://prometheus.openfaas.svc.cluster.local:9090"
           - name: GATEWAY_URL
