@@ -1,0 +1,32 @@
+2023-06-05 06:49:27.635
+2023/06/05 06:49:27 test-0 CPU usage: test-0-7795cf49d-ll2lm: [370 1000]test-0-7795cf49d-sc8qh: [329 1000]test-0-7795cf49d-tbgzd: [358 1000]test-0-7795cf49d-xm2jw: [485 1000]test-0-7795cf49d-8kp6d: [568 1000]
+2023-06-05 06:48:22.809
+2023/06/05 06:48:22 test-0 CPU usage: test-0-7795cf49d-8kp6d: [595 1000]test-0-7795cf49d-ll2lm: [407 1000]test-0-7795cf49d-sc8qh: [338 1000]test-0-7795cf49d-tbgzd: [498 1000]test-0-7795cf49d-xm2jw: [533 1000]
+2023-06-05 06:47:13.147
+2023/06/05 06:47:13 test-0 CPU usage: test-0-7795cf49d-ll2lm: [198 1000]test-0-7795cf49d-sc8qh: [233 1000]test-0-7795cf49d-tbgzd: [349 1000]test-0-7795cf49d-xm2jw: [194 1000]test-0-7795cf49d-8kp6d: [373 1000]
+2023-06-05 06:46:08.274
+2023/06/05 06:46:08 test-0 CPU usage: test-0-7795cf49d-8kp6d: [876 1000]test-0-7795cf49d-ll2lm: [648 1000]test-0-7795cf49d-sc8qh: [555 1000]test-0-7795cf49d-tbgzd: [484 1000]test-0-7795cf49d-xm2jw: [852 1000]
+
+2023-06-05 06:53:29.727
+2023/06/05 06:53:29 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [806 2000]
+2023-06-05 06:52:15.289
+2023/06/05 06:52:15 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [940 2000]
+2023-06-05 06:51:13.410
+2023/06/05 06:51:13 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [924 2000]
+2023-06-05 06:50:10.168
+2023/06/05 06:50:10 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [928 2000]
+2023-06-05 06:49:30.017
+2023/06/05 06:49:30 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [787 2000]
+2023-06-05 06:48:12.928
+2023/06/05 06:48:12 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [939 2000]
+2023-06-05 06:47:15.472
+2023/06/05 06:47:15 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [843 2000]
+2023-06-05 06:46:10.665
+2023/06/05 06:46:10 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [1793 2000]
+2023-06-05 06:45:20.198
+2023/06/05 06:45:20 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [1770 2000]
+2023-06-05 06:44:14.413
+2023/06/05 06:44:14 service-0-0 CPU usage: service-0-0-979bdd4fd-vs4z6: [1774 2000]
+
+memory: 3.147333632e+09  6.7305472e+07 x5
+

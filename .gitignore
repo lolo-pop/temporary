@@ -1,13 +1,12 @@
-*.csv
+
 *.rar
 *.json
 
 training/point results
 training/predict_models
 training/results
-*.log
-*.txt
 
+AzurePublicDataset
 function/tftest
 function/service-0
 function/service-1

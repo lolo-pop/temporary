@@ -1,0 +1,22 @@
+2023-06-06 03:41:08.984
+2023/06/06 03:41:08 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [2588 6000]tfpython-3-6647b4ff45-fwktx: [4226 6000]
+2023-06-06 03:40:08.068
+2023/06/06 03:40:08 tfpython-3 CPU usage: tfpython-3-6647b4ff45-fwktx: [2968 6000]tfpython-3-6647b4ff45-7d8sn: [3402 6000]
+2023-06-06 03:39:31.240
+2023/06/06 03:39:31 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [3874 6000]tfpython-3-6647b4ff45-fwktx: [3565 6000]
+2023-06-06 03:38:08.105
+2023/06/06 03:38:08 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [3353 6000]tfpython-3-6647b4ff45-fwktx: [3142 6000]
+2023-06-06 03:37:16.557
+2023/06/06 03:37:16 tfpython-3 CPU usage: tfpython-3-6647b4ff45-fwktx: [2596 6000]tfpython-3-6647b4ff45-7d8sn: [3879 6000]
+2023-06-06 03:36:11.081
+2023/06/06 03:36:11 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [3568 6000]tfpython-3-6647b4ff45-fwktx: [2355 6000]
+2023-06-06 03:35:10.766
+2023/06/06 03:35:10 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [3816 6000]tfpython-3-6647b4ff45-fwktx: [3187 6000]
+2023-06-06 03:34:06.150
+2023/06/06 03:34:06 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [2351 6000]tfpython-3-6647b4ff45-fwktx: [3964 6000]
+2023-06-06 03:33:27.993
+2023/06/06 03:33:27 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [732 6000]tfpython-3-6647b4ff45-fwktx: [5125 6000]
+2023-06-06 03:32:29.094
+2023/06/06 03:32:29 tfpython-3 CPU usage: tfpython-3-6647b4ff45-7d8sn: [4107 6000]tfpython-3-6647b4ff45-fwktx: [2395 6000]
+
+4.828758016e+09  4.716961792e+09
