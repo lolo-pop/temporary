@@ -1,0 +1,827 @@
+nohup: ignoring input
+[33m[0] > Building service-1-0.
+[0mClearing temporary build folder: ./build/service-1-0/
+Preparing: ./service/ build/service-1-0/function
+Skipping "build" folder
+Building: lolopop/service:1 with python3-http-debian template. Please wait..
+Sending build context to Docker daemon  876.9MB
+Step 1/36 : FROM --platform=${TARGETPLATFORM:-linux/amd64} ghcr.io/openfaas/of-watchdog:0.9.10 as watchdog
+ ---> 9f97468a4531
+Step 2/36 : FROM --platform=${TARGETPLATFORM:-linux/amd64} python:3.7 as build
+ ---> c70a645202fb
+Step 3/36 : COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
+ ---> Using cache
+ ---> 9a3ee634f424
+Step 4/36 : RUN chmod +x /usr/bin/fwatchdog
+ ---> Using cache
+ ---> ec8fed24c9e4
+Step 5/36 : ARG ADDITIONAL_PACKAGE
+ ---> Using cache
+ ---> 3292b9db2454
+Step 6/36 : RUN apt-get -qy update     && apt-get -qy install ${ADDITIONAL_PACKAGE}     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> 329da2b7f74a
+Step 7/36 : RUN addgroup --system app && adduser app --system --ingroup app
+ ---> Using cache
+ ---> 5c6e9da05787
+Step 8/36 : RUN chown app /home/app
+ ---> Using cache
+ ---> fe5165d14934
+Step 9/36 : USER app
+ ---> Using cache
+ ---> 1bb1885244ee
+Step 10/36 : ENV PATH=$PATH:/home/app/.local/bin
+ ---> Using cache
+ ---> 3e3b488b6d2c
+Step 11/36 : WORKDIR /home/app/
+ ---> Using cache
+ ---> fa0d2b9a2023
+Step 12/36 : COPY --chown=app:app index.py           .
+ ---> Using cache
+ ---> 737835955b2e
+Step 13/36 : COPY --chown=app:app requirements.txt   .
+ ---> Using cache
+ ---> 965fab0485d5
+Step 14/36 : USER root
+ ---> Using cache
+ ---> 61f17732fe9b
+Step 15/36 : RUN pip install --no-cache-dir -r requirements.txt
+ ---> Using cache
+ ---> 1dad7130c319
+Step 16/36 : USER app
+ ---> Using cache
+ ---> d2d480bd60a1
+Step 17/36 : RUN mkdir -p function
+ ---> Using cache
+ ---> 1bcaf15a869b
+Step 18/36 : RUN touch ./function/__init__.py
+ ---> Using cache
+ ---> 18e02c32ec57
+Step 19/36 : WORKDIR /home/app/function/
+ ---> Using cache
+ ---> 75e64b29e81a
+Step 20/36 : COPY --chown=app:app function/requirements.txt	.
+ ---> Using cache
+ ---> 88125469d978
+Step 21/36 : RUN pip install --no-cache-dir --user -r requirements.txt
+ ---> Using cache
+ ---> 35a82cc463b3
+Step 22/36 : USER root
+ ---> Using cache
+ ---> 5994ba6683f5
+Step 23/36 : COPY --chown=app:app function/   .
+ ---> ba0dfc838d3a
+Step 24/36 : USER app
+ ---> Running in fb055d52f469
+Removing intermediate container fb055d52f469
+ ---> cea4f7bad242
+Step 25/36 : RUN python -m pip install .
+ ---> Running in c952ee2356d7
+Defaulting to user installation because normal site-packages is not writeable
+Processing /home/app/function
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting avro-python3
+  Downloading avro-python3-1.10.2.tar.gz (38 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting apache-beam
+  Downloading apache_beam-2.48.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.5/13.5 MB 31.3 MB/s eta 0:00:00
+Requirement already satisfied: pillow in /home/app/.local/lib/python3.7/site-packages (from object-detection==0.1) (9.5.0)
+Collecting lxml
+  Downloading lxml-4.9.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (6.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 22.9 MB/s eta 0:00:00
+Collecting matplotlib
+  Downloading matplotlib-3.5.3-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (11.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.2/11.2 MB 34.0 MB/s eta 0:00:00
+Collecting Cython
+  Downloading Cython-0.29.35-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (1.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 57.9 MB/s eta 0:00:00
+Collecting contextlib2
+  Downloading contextlib2-21.6.0-py2.py3-none-any.whl (13 kB)
+Collecting tf-slim
+  Downloading tf_slim-1.1.0-py2.py3-none-any.whl (352 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 352.1/352.1 KB 42.5 MB/s eta 0:00:00
+Requirement already satisfied: six in /usr/local/lib/python3.7/site-packages (from object-detection==0.1) (1.16.0)
+Collecting pycocotools
+  Downloading pycocotools-2.0.6.tar.gz (24 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting lvis
+  Downloading lvis-0.5.3-py3-none-any.whl (14 kB)
+Collecting scipy
+  Downloading scipy-1.7.3-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (38.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 38.1/38.1 MB 22.1 MB/s eta 0:00:00
+Collecting pandas
+  Downloading pandas-1.3.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 31.9 MB/s eta 0:00:00
+Collecting tf-models-official>=2.5.1
+  Downloading tf_models_official-2.12.0-py2.py3-none-any.whl (2.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.6/2.6 MB 43.5 MB/s eta 0:00:00
+Collecting tensorflow_io
+  Downloading tensorflow_io-0.32.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (28.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 28.0/28.0 MB 20.7 MB/s eta 0:00:00
+Requirement already satisfied: keras in /home/app/.local/lib/python3.7/site-packages (from object-detection==0.1) (2.11.0)
+Collecting pyparsing==2.4.7
+  Downloading pyparsing-2.4.7-py2.py3-none-any.whl (67 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.8/67.8 KB 12.2 MB/s eta 0:00:00
+Collecting sacrebleu<=2.2.0
+  Downloading sacrebleu-2.2.0-py3-none-any.whl (116 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 116.6/116.6 KB 25.8 MB/s eta 0:00:00
+Collecting portalocker
+  Downloading portalocker-2.7.0-py2.py3-none-any.whl (15 kB)
+Collecting tabulate>=0.8.9
+  Downloading tabulate-0.9.0-py3-none-any.whl (35 kB)
+Collecting colorama
+  Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Requirement already satisfied: numpy>=1.17 in /home/app/.local/lib/python3.7/site-packages (from sacrebleu<=2.2.0->object-detection==0.1) (1.21.6)
+Collecting regex
+  Downloading regex-2023.6.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (755 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 755.7/755.7 KB 32.8 MB/s eta 0:00:00
+Collecting pyyaml<6.0,>=5.1
+  Downloading PyYAML-5.4.1-cp37-cp37m-manylinux1_x86_64.whl (636 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 636.6/636.6 KB 36.5 MB/s eta 0:00:00
+Collecting tensorflow-datasets
+  Downloading tensorflow_datasets-4.8.2-py3-none-any.whl (5.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.3/5.3 MB 24.3 MB/s eta 0:00:00
+Collecting gin-config
+  Downloading gin_config-0.5.0-py3-none-any.whl (61 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.3/61.3 KB 11.4 MB/s eta 0:00:00
+Collecting seqeval
+  Downloading seqeval-1.2.2.tar.gz (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 KB 8.8 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting tensorflow-model-optimization>=0.4.1
+  Downloading tensorflow_model_optimization-0.7.5-py2.py3-none-any.whl (241 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 241.2/241.2 KB 22.6 MB/s eta 0:00:00
+Collecting py-cpuinfo>=3.3.0
+  Downloading py_cpuinfo-9.0.0-py3-none-any.whl (22 kB)
+Collecting google-api-python-client>=1.6.7
+  Downloading google_api_python_client-2.88.0-py2.py3-none-any.whl (11.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.4/11.4 MB 26.0 MB/s eta 0:00:00
+Collecting oauth2client
+  Downloading oauth2client-4.1.3-py2.py3-none-any.whl (98 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 98.2/98.2 KB 20.8 MB/s eta 0:00:00
+Collecting immutabledict
+  Downloading immutabledict-2.2.4-py3-none-any.whl (4.1 kB)
+Collecting opencv-python-headless
+  Downloading opencv_python_headless-4.7.0.72-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (49.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 49.2/49.2 MB 19.8 MB/s eta 0:00:00
+Collecting tensorflow-addons
+  Downloading tensorflow_addons-0.19.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 29.5 MB/s eta 0:00:00
+Collecting tf-models-official>=2.5.1
+  Downloading tf_models_official-2.11.6-py2.py3-none-any.whl (2.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 32.8 MB/s eta 0:00:00
+Collecting tensorflow-hub>=0.6.0
+  Downloading tensorflow_hub-0.13.0-py2.py3-none-any.whl (100 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.6/100.6 KB 18.9 MB/s eta 0:00:00
+Collecting tensorflow-text~=2.11.0
+  Downloading tensorflow_text-2.11.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.8/5.8 MB 20.5 MB/s eta 0:00:00
+Collecting psutil>=5.4.3
+  Downloading psutil-5.9.5-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (282 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 282.1/282.1 KB 20.7 MB/s eta 0:00:00
+Requirement already satisfied: tensorflow~=2.11.0 in /home/app/.local/lib/python3.7/site-packages (from tf-models-official>=2.5.1->object-detection==0.1) (2.11.0)
+Collecting kaggle>=1.3.9
+  Downloading kaggle-1.5.13.tar.gz (63 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.3/63.3 KB 14.4 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting sentencepiece
+  Downloading sentencepiece-0.1.99-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 32.9 MB/s eta 0:00:00
+Collecting pytz>=2017.3
+  Downloading pytz-2023.3-py2.py3-none-any.whl (502 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 502.3/502.3 KB 42.1 MB/s eta 0:00:00
+Collecting python-dateutil>=2.7.3
+  Downloading python_dateutil-2.8.2-py2.py3-none-any.whl (247 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 247.7/247.7 KB 30.4 MB/s eta 0:00:00
+Requirement already satisfied: absl-py>=0.2.2 in /home/app/.local/lib/python3.7/site-packages (from tf-slim->object-detection==0.1) (1.4.0)
+Collecting hdfs<3.0.0,>=2.1.0
+  Downloading hdfs-2.7.0-py3-none-any.whl (34 kB)
+Collecting cloudpickle~=2.2.1
+  Downloading cloudpickle-2.2.1-py3-none-any.whl (25 kB)
+Collecting httplib2<0.23.0,>=0.8
+  Downloading httplib2-0.22.0-py3-none-any.whl (96 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 96.9/96.9 KB 22.0 MB/s eta 0:00:00
+Collecting dill<0.3.2,>=0.3.1.1
+  Downloading dill-0.3.1.1.tar.gz (151 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 152.0/152.0 KB 24.1 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting objsize<0.7.0,>=0.6.1
+  Downloading objsize-0.6.1-py3-none-any.whl (9.3 kB)
+Collecting proto-plus<2,>=1.7.1
+  Downloading proto_plus-1.22.2-py3-none-any.whl (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.9/47.9 KB 8.6 MB/s eta 0:00:00
+Requirement already satisfied: grpcio!=1.48.0,<2,>=1.33.1 in /home/app/.local/lib/python3.7/site-packages (from apache-beam->object-detection==0.1) (1.54.0)
+Collecting fasteners<1.0,>=0.3
+  Downloading fasteners-0.18-py3-none-any.whl (18 kB)
+Collecting protobuf<4.24.0,>=3.20.3
+  Downloading protobuf-4.23.2-cp37-abi3-manylinux2014_x86_64.whl (304 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 304.5/304.5 KB 26.1 MB/s eta 0:00:00
+Requirement already satisfied: requests<3.0.0,>=2.24.0 in /home/app/.local/lib/python3.7/site-packages (from apache-beam->object-detection==0.1) (2.28.2)
+Collecting pymongo<5.0.0,>=3.8.0
+  Downloading pymongo-4.3.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (484 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 484.5/484.5 KB 35.9 MB/s eta 0:00:00
+Requirement already satisfied: typing-extensions>=3.7.0 in /usr/local/lib/python3.7/site-packages (from apache-beam->object-detection==0.1) (4.5.0)
+Collecting crcmod<2.0,>=1.7
+  Downloading crcmod-1.7.tar.gz (89 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.7/89.7 KB 15.4 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting orjson<4.0
+  Downloading orjson-3.9.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (136 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 136.9/136.9 KB 22.9 MB/s eta 0:00:00
+Collecting pyarrow<12.0.0,>=3.0.0
+  Downloading pyarrow-11.0.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (35.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.1/35.1 MB 21.8 MB/s eta 0:00:00
+Collecting fastavro<2,>=0.23.6
+  Downloading fastavro-1.7.4-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 35.2 MB/s eta 0:00:00
+Collecting zstandard<1,>=0.18.0
+  Downloading zstandard-0.21.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.7/2.7 MB 29.6 MB/s eta 0:00:00
+Collecting pydot<2,>=1.2.0
+  Downloading pydot-1.4.2-py2.py3-none-any.whl (21 kB)
+Collecting kiwisolver>=1.1.0
+  Downloading kiwisolver-1.4.4-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (1.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 37.0 MB/s eta 0:00:00
+Collecting opencv-python>=4.1.0.25
+  Downloading opencv_python-4.7.0.72-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (61.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.8/61.8 MB 19.8 MB/s eta 0:00:00
+Collecting cycler>=0.10.0
+  Downloading cycler-0.11.0-py3-none-any.whl (6.4 kB)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.7/site-packages (from matplotlib->object-detection==0.1) (23.1)
+Collecting fonttools>=4.22.0
+  Downloading fonttools-4.38.0-py3-none-any.whl (965 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 965.4/965.4 KB 40.9 MB/s eta 0:00:00
+Requirement already satisfied: tensorflow-io-gcs-filesystem==0.32.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow_io->object-detection==0.1) (0.32.0)
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5
+  Downloading google_api_core-2.11.0-py3-none-any.whl (120 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 120.3/120.3 KB 19.2 MB/s eta 0:00:00
+Collecting uritemplate<5,>=3.0.1
+  Downloading uritemplate-4.1.1-py2.py3-none-any.whl (10 kB)
+Requirement already satisfied: google-auth<3.0.0dev,>=1.19.0 in /home/app/.local/lib/python3.7/site-packages (from google-api-python-client>=1.6.7->tf-models-official>=2.5.1->object-detection==0.1) (2.17.3)
+Collecting google-auth-httplib2>=0.1.0
+  Downloading google_auth_httplib2-0.1.0-py2.py3-none-any.whl (9.3 kB)
+Collecting docopt
+  Downloading docopt-0.6.2.tar.gz (25 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: certifi in /home/app/.local/lib/python3.7/site-packages (from kaggle>=1.3.9->tf-models-official>=2.5.1->object-detection==0.1) (2022.12.7)
+Collecting tqdm
+  Downloading tqdm-4.65.0-py3-none-any.whl (77 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 77.1/77.1 KB 21.4 MB/s eta 0:00:00
+Collecting python-slugify
+  Downloading python_slugify-8.0.1-py2.py3-none-any.whl (9.7 kB)
+Requirement already satisfied: urllib3 in /home/app/.local/lib/python3.7/site-packages (from kaggle>=1.3.9->tf-models-official>=2.5.1->object-detection==0.1) (1.26.15)
+Collecting dnspython<3.0.0,>=1.16.0
+  Downloading dnspython-2.3.0-py3-none-any.whl (283 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 283.7/283.7 KB 40.3 MB/s eta 0:00:00
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/app/.local/lib/python3.7/site-packages (from requests<3.0.0,>=2.24.0->apache-beam->object-detection==0.1) (3.1.0)
+Requirement already satisfied: idna<4,>=2.5 in /home/app/.local/lib/python3.7/site-packages (from requests<3.0.0,>=2.24.0->apache-beam->object-detection==0.1) (3.4)
+Requirement already satisfied: opt-einsum>=2.3.2 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (3.3.0)
+Requirement already satisfied: gast<=0.4.0,>=0.2.1 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (0.4.0)
+Requirement already satisfied: libclang>=13.0.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (16.0.0)
+INFO: pip is looking at multiple versions of tabulate to determine which version is compatible with other requirements. This could take a while.
+Collecting tabulate>=0.8.9
+  Downloading tabulate-0.8.10-py3-none-any.whl (29 kB)
+INFO: pip is looking at multiple versions of requests to determine which version is compatible with other requirements. This could take a while.
+Collecting requests<3.0.0,>=2.24.0
+  Downloading requests-2.31.0-py3-none-any.whl (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.6/62.6 KB 12.4 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of regex to determine which version is compatible with other requirements. This could take a while.
+Collecting regex
+  Downloading regex-2023.5.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (756 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 756.6/756.6 KB 36.3 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of pyyaml to determine which version is compatible with other requirements. This could take a while.
+Collecting pyyaml<6.0,>=5.1
+  Downloading PyYAML-5.4-cp37-cp37m-manylinux1_x86_64.whl (636 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 636.5/636.5 KB 39.4 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of pytz to determine which version is compatible with other requirements. This could take a while.
+Collecting pytz>=2017.3
+  Downloading pytz-2023.2-py2.py3-none-any.whl (502 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 502.1/502.1 KB 38.4 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of python-dateutil to determine which version is compatible with other requirements. This could take a while.
+Collecting python-dateutil>=2.7.3
+  Downloading python_dateutil-2.8.1-py2.py3-none-any.whl (227 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 227.2/227.2 KB 40.9 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of pymongo to determine which version is compatible with other requirements. This could take a while.
+Collecting pymongo<5.0.0,>=3.8.0
+  Downloading pymongo-4.3.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (483 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 483.9/483.9 KB 39.0 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of pydot to determine which version is compatible with other requirements. This could take a while.
+Collecting pydot<2,>=1.2.0
+  Downloading pydot-1.4.1-py2.py3-none-any.whl (19 kB)
+INFO: pip is looking at multiple versions of pyarrow to determine which version is compatible with other requirements. This could take a while.
+Collecting pyarrow<12.0.0,>=3.0.0
+  Downloading pyarrow-10.0.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (36.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 20.6 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of py-cpuinfo to determine which version is compatible with other requirements. This could take a while.
+Collecting py-cpuinfo>=3.3.0
+  Downloading py-cpuinfo-8.0.0.tar.gz (99 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 99.8/99.8 KB 26.2 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+INFO: pip is looking at multiple versions of psutil to determine which version is compatible with other requirements. This could take a while.
+Collecting psutil>=5.4.3
+  Downloading psutil-5.9.4-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (280 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 280.2/280.2 KB 32.3 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of protobuf to determine which version is compatible with other requirements. This could take a while.
+Collecting protobuf<4.24.0,>=3.20.3
+  Downloading protobuf-4.23.1-cp37-abi3-manylinux2014_x86_64.whl (304 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 304.5/304.5 KB 31.5 MB/s eta 0:00:00
+  Downloading protobuf-4.23.0-cp37-abi3-manylinux2014_x86_64.whl (304 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 304.5/304.5 KB 28.9 MB/s eta 0:00:00
+  Downloading protobuf-4.22.5-cp37-abi3-manylinux2014_x86_64.whl (302 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 302.4/302.4 KB 31.9 MB/s eta 0:00:00
+  Downloading protobuf-4.22.4-cp37-abi3-manylinux2014_x86_64.whl (302 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 302.4/302.4 KB 30.8 MB/s eta 0:00:00
+  Downloading protobuf-4.22.3-cp37-abi3-manylinux2014_x86_64.whl (302 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 302.4/302.4 KB 27.5 MB/s eta 0:00:00
+  Downloading protobuf-4.22.1-cp37-abi3-manylinux2014_x86_64.whl (302 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 302.4/302.4 KB 31.5 MB/s eta 0:00:00
+  Downloading protobuf-4.22.0-cp37-abi3-manylinux2014_x86_64.whl (302 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 302.4/302.4 KB 31.5 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of protobuf to determine which version is compatible with other requirements. This could take a while.
+  Downloading protobuf-4.21.12-cp37-abi3-manylinux2014_x86_64.whl (409 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 409.8/409.8 KB 34.0 MB/s eta 0:00:00
+  Downloading protobuf-4.21.11-cp37-abi3-manylinux2014_x86_64.whl (409 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 409.8/409.8 KB 34.1 MB/s eta 0:00:00
+  Downloading protobuf-4.21.10-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 40.2 MB/s eta 0:00:00
+  Downloading protobuf-4.21.9-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 37.5 MB/s eta 0:00:00
+  Downloading protobuf-4.21.8-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 33.8 MB/s eta 0:00:00
+INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+  Downloading protobuf-4.21.7-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 33.0 MB/s eta 0:00:00
+  Downloading protobuf-4.21.6-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 39.3 MB/s eta 0:00:00
+  Downloading protobuf-4.21.5-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 35.9 MB/s eta 0:00:00
+  Downloading protobuf-4.21.4-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 37.6 MB/s eta 0:00:00
+  Downloading protobuf-4.21.3-cp37-abi3-manylinux2014_x86_64.whl (408 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 408.4/408.4 KB 40.3 MB/s eta 0:00:00
+  Downloading protobuf-4.21.2-cp37-abi3-manylinux2014_x86_64.whl (407 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 407.8/407.8 KB 45.2 MB/s eta 0:00:00
+  Downloading protobuf-4.21.1-cp37-abi3-manylinux2014_x86_64.whl (407 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 407.8/407.8 KB 36.2 MB/s eta 0:00:00
+  Downloading protobuf-3.20.3-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (1.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 34.0 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of proto-plus to determine which version is compatible with other requirements. This could take a while.
+Collecting proto-plus<2,>=1.7.1
+  Downloading proto_plus-1.22.1-py3-none-any.whl (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.9/47.9 KB 9.1 MB/s eta 0:00:00
+  Downloading proto_plus-1.22.0-py3-none-any.whl (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.7/47.7 KB 9.2 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.6-py3-none-any.whl (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.4/46.4 KB 8.9 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.5-py3-none-any.whl (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.4/46.4 KB 9.9 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.4-py3-none-any.whl (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.4/46.4 KB 8.0 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.3-py3-none-any.whl (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.2/46.2 KB 14.1 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.2-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.0/46.0 KB 9.2 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of proto-plus to determine which version is compatible with other requirements. This could take a while.
+  Downloading proto_plus-1.20.1-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.9/45.9 KB 9.7 MB/s eta 0:00:00
+  Downloading proto_plus-1.20.0-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.7/45.7 KB 9.6 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.9-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.5/45.5 KB 8.4 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.8-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 KB 10.7 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.7-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 KB 8.5 MB/s eta 0:00:00
+INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+  Downloading proto_plus-1.19.6-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 KB 11.1 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.5-py3-none-any.whl (44 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.2/44.2 KB 10.3 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.4-py3-none-any.whl (44 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.2/44.2 KB 9.2 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.3-py3-none-any.whl (44 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.2/44.2 KB 10.4 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.2-py3-none-any.whl (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 KB 9.5 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.1-py3-none-any.whl (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 KB 2.2 MB/s eta 0:00:00
+  Downloading proto_plus-1.19.0-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.0/43.0 KB 9.1 MB/s eta 0:00:00
+  Downloading proto_plus-1.18.1-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.0/43.0 KB 7.5 MB/s eta 0:00:00
+  Downloading proto_plus-1.18.0-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.0/43.0 KB 9.5 MB/s eta 0:00:00
+  Downloading proto_plus-1.17.0-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.6/42.6 KB 9.5 MB/s eta 0:00:00
+  Downloading proto_plus-1.16.0-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.6/42.6 KB 11.3 MB/s eta 0:00:00
+  Downloading proto_plus-1.15.0-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.5/42.5 KB 8.5 MB/s eta 0:00:00
+  Downloading proto_plus-1.14.2-py3-none-any.whl (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.3/42.3 KB 7.4 MB/s eta 0:00:00
+  Downloading proto-plus-1.13.0.tar.gz (44 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.2/44.2 KB 9.1 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.11.0.tar.gz (44 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 KB 8.2 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.10.2.tar.gz (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.9/42.9 KB 9.1 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.10.1.tar.gz (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.9/42.9 KB 7.6 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.10.0.tar.gz (24 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.9.1.tar.gz (23 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.9.0.tar.gz (24 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.8.1.tar.gz (23 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.8.0.tar.gz (24 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+  Downloading proto-plus-1.7.1.tar.gz (23 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+INFO: pip is looking at multiple versions of packaging to determine which version is compatible with other requirements. This could take a while.
+Collecting packaging>=20.0
+  Downloading packaging-23.1-py3-none-any.whl (48 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.9/48.9 KB 14.8 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of orjson to determine which version is compatible with other requirements. This could take a while.
+Collecting orjson<4.0
+  Downloading orjson-3.8.14-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (136 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 136.5/136.5 KB 28.4 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of opencv-python to determine which version is compatible with other requirements. This could take a while.
+Collecting opencv-python>=4.1.0.25
+  Downloading opencv_python-4.7.0.68-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (61.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.8/61.8 MB 15.4 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of objsize to determine which version is compatible with other requirements. This could take a while.
+INFO: pip is looking at multiple versions of numpy to determine which version is compatible with other requirements. This could take a while.
+Collecting numpy>=1.17
+  Downloading numpy-1.21.6-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (15.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.7/15.7 MB 26.6 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of kiwisolver to determine which version is compatible with other requirements. This could take a while.
+Collecting kiwisolver>=1.1.0
+  Downloading kiwisolver-1.4.3-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (1.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 36.8 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of kaggle to determine which version is compatible with other requirements. This could take a while.
+Collecting kaggle>=1.3.9
+  Downloading kaggle-1.5.12.tar.gz (58 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 59.0/59.0 KB 495.6 kB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+INFO: pip is looking at multiple versions of httplib2 to determine which version is compatible with other requirements. This could take a while.
+Collecting httplib2<0.23.0,>=0.8
+  Downloading httplib2-0.21.0-py3-none-any.whl (96 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 96.8/96.8 KB 16.2 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of hdfs to determine which version is compatible with other requirements. This could take a while.
+Collecting hdfs<3.0.0,>=2.1.0
+  Downloading hdfs-2.6.0-py3-none-any.whl (33 kB)
+INFO: pip is looking at multiple versions of grpcio to determine which version is compatible with other requirements. This could take a while.
+Collecting grpcio!=1.48.0,<2,>=1.33.1
+  Downloading grpcio-1.54.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 22.2 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of google-api-python-client to determine which version is compatible with other requirements. This could take a while.
+Collecting google-api-python-client>=1.6.7
+  Downloading google_api_python_client-2.87.0-py2.py3-none-any.whl (11.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.4/11.4 MB 20.3 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of fonttools to determine which version is compatible with other requirements. This could take a while.
+Collecting fonttools>=4.22.0
+  Downloading fonttools-4.37.4-py3-none-any.whl (960 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 960.8/960.8 KB 25.0 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of fasteners to determine which version is compatible with other requirements. This could take a while.
+Collecting fasteners<1.0,>=0.3
+  Downloading fasteners-0.17.3-py3-none-any.whl (18 kB)
+INFO: pip is looking at multiple versions of fastavro to determine which version is compatible with other requirements. This could take a while.
+Collecting fastavro<2,>=0.23.6
+  Downloading fastavro-1.7.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 24.2 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of dill to determine which version is compatible with other requirements. This could take a while.
+INFO: pip is looking at multiple versions of cycler to determine which version is compatible with other requirements. This could take a while.
+Collecting cycler>=0.10.0
+  Downloading cycler-0.10.0-py2.py3-none-any.whl (6.5 kB)
+INFO: pip is looking at multiple versions of crcmod to determine which version is compatible with other requirements. This could take a while.
+INFO: pip is looking at multiple versions of cloudpickle to determine which version is compatible with other requirements. This could take a while.
+INFO: pip is looking at multiple versions of absl-py to determine which version is compatible with other requirements. This could take a while.
+Collecting absl-py>=0.2.2
+  Downloading absl_py-1.4.0-py3-none-any.whl (126 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 126.5/126.5 KB 20.7 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of tensorflow-io-gcs-filesystem to determine which version is compatible with other requirements. This could take a while.
+Collecting tensorflow-io-gcs-filesystem==0.32.0
+  Downloading tensorflow_io_gcs_filesystem-0.32.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (2.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 23.2 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of tensorflow-io to determine which version is compatible with other requirements. This could take a while.
+Collecting tensorflow_io
+  Downloading tensorflow_io-0.31.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (26.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 26.9/26.9 MB 20.6 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of pycocotools to determine which version is compatible with other requirements. This could take a while.
+Collecting pycocotools
+  Downloading pycocotools-2.0.5.tar.gz (24 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+INFO: pip is looking at multiple versions of lxml to determine which version is compatible with other requirements. This could take a while.
+Collecting lxml
+  Downloading lxml-4.9.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (6.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.4/6.4 MB 26.0 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of six to determine which version is compatible with other requirements. This could take a while.
+Collecting six
+  Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
+INFO: pip is looking at multiple versions of pillow to determine which version is compatible with other requirements. This could take a while.
+Collecting pillow
+  Downloading Pillow-9.5.0-cp37-cp37m-manylinux_2_28_x86_64.whl (3.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 24.9 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of matplotlib to determine which version is compatible with other requirements. This could take a while.
+Collecting matplotlib
+  Downloading matplotlib-3.5.2-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (11.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.2/11.2 MB 25.0 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of lvis to determine which version is compatible with other requirements. This could take a while.
+Collecting lvis
+  Downloading lvis-0.5.2-py3-none-any.whl (14 kB)
+INFO: pip is looking at multiple versions of keras to determine which version is compatible with other requirements. This could take a while.
+Collecting keras
+  Downloading keras-2.11.0-py2.py3-none-any.whl (1.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 32.1 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of cython to determine which version is compatible with other requirements. This could take a while.
+Collecting Cython
+  Downloading Cython-0.29.34-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (1.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 33.6 MB/s eta 0:00:00
+INFO: pip is looking at multiple versions of contextlib2 to determine which version is compatible with other requirements. This could take a while.
+Collecting contextlib2
+  Downloading contextlib2-0.6.0.post1-py2.py3-none-any.whl (9.8 kB)
+INFO: pip is looking at multiple versions of avro-python3 to determine which version is compatible with other requirements. This could take a while.
+Collecting avro-python3
+  Downloading avro-python3-1.10.1.tar.gz (38 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+INFO: pip is looking at multiple versions of apache-beam to determine which version is compatible with other requirements. This could take a while.
+Collecting apache-beam
+  Downloading apache_beam-2.47.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.5/13.5 MB 22.8 MB/s eta 0:00:00
+  Downloading apache_beam-2.46.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.4/13.4 MB 24.6 MB/s eta 0:00:00
+Collecting pymongo<4.0.0,>=3.8.0
+  Downloading pymongo-3.13.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (506 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 506.0/506.0 KB 31.9 MB/s eta 0:00:00
+Requirement already satisfied: protobuf<4,>3.12.2 in /home/app/.local/lib/python3.7/site-packages (from apache-beam->object-detection==0.1) (3.19.6)
+Collecting pyarrow<10.0.0,>=3.0.0
+  Downloading pyarrow-9.0.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (35.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 20.5 MB/s eta 0:00:00
+Requirement already satisfied: termcolor>=1.1.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (2.2.0)
+Requirement already satisfied: tensorflow-estimator<2.12,>=2.11.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (2.11.0)
+Requirement already satisfied: wrapt>=1.11.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (1.15.0)
+Requirement already satisfied: google-pasta>=0.1.1 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (0.2.0)
+Requirement already satisfied: flatbuffers>=2.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (23.3.3)
+Requirement already satisfied: h5py>=2.9.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (3.8.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (57.5.0)
+Requirement already satisfied: tensorboard<2.12,>=2.11 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (2.11.2)
+Requirement already satisfied: astunparse>=1.6.0 in /home/app/.local/lib/python3.7/site-packages (from tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (1.6.3)
+Collecting tensorflow-model-optimization>=0.4.1
+  Downloading tensorflow_model_optimization-0.7.4-py2.py3-none-any.whl (240 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 240.6/240.6 KB 21.5 MB/s eta 0:00:00
+  Downloading tensorflow_model_optimization-0.7.3-py2.py3-none-any.whl (238 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 238.9/238.9 KB 27.9 MB/s eta 0:00:00
+Collecting dm-tree~=0.1.1
+  Downloading dm_tree-0.1.8-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (153 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 153.8/153.8 KB 22.9 MB/s eta 0:00:00
+Requirement already satisfied: rsa>=3.1.4 in /home/app/.local/lib/python3.7/site-packages (from oauth2client->tf-models-official>=2.5.1->object-detection==0.1) (4.9)
+Requirement already satisfied: pyasn1-modules>=0.0.5 in /home/app/.local/lib/python3.7/site-packages (from oauth2client->tf-models-official>=2.5.1->object-detection==0.1) (0.3.0)
+Requirement already satisfied: pyasn1>=0.1.7 in /home/app/.local/lib/python3.7/site-packages (from oauth2client->tf-models-official>=2.5.1->object-detection==0.1) (0.5.0)
+Collecting scikit-learn>=0.21.3
+  Downloading scikit_learn-1.0.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (24.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.8/24.8 MB 24.4 MB/s eta 0:00:00
+Collecting typeguard>=2.7
+  Downloading typeguard-4.0.0-py3-none-any.whl (33 kB)
+Requirement already satisfied: click in /usr/local/lib/python3.7/site-packages (from tensorflow-datasets->tf-models-official>=2.5.1->object-detection==0.1) (8.1.3)
+Collecting importlib-resources
+  Downloading importlib_resources-5.12.0-py3-none-any.whl (36 kB)
+Collecting etils[enp,epath]>=0.9.0
+  Downloading etils-0.9.0-py3-none-any.whl (140 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 140.1/140.1 KB 22.5 MB/s eta 0:00:00
+Collecting toml
+  Downloading toml-0.10.2-py2.py3-none-any.whl (16 kB)
+Collecting promise
+  Downloading promise-2.3.tar.gz (19 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting tensorflow-metadata
+  Downloading tensorflow_metadata-1.12.0-py3-none-any.whl (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.3/52.3 KB 8.9 MB/s eta 0:00:00
+Requirement already satisfied: wheel<1.0,>=0.23.0 in /usr/local/lib/python3.7/site-packages (from astunparse>=1.6.0->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (0.40.0)
+Requirement already satisfied: zipp in /usr/local/lib/python3.7/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->tf-models-official>=2.5.1->object-detection==0.1) (3.15.0)
+Collecting googleapis-common-protos<2.0dev,>=1.56.2
+  Downloading googleapis_common_protos-1.59.0-py2.py3-none-any.whl (223 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 223.6/223.6 KB 28.9 MB/s eta 0:00:00
+Requirement already satisfied: cachetools<6.0,>=2.0.0 in /home/app/.local/lib/python3.7/site-packages (from google-auth<3.0.0dev,>=1.19.0->google-api-python-client>=1.6.7->tf-models-official>=2.5.1->object-detection==0.1) (5.3.0)
+Collecting threadpoolctl>=2.0.0
+  Downloading threadpoolctl-3.1.0-py3-none-any.whl (14 kB)
+Collecting joblib>=0.11
+  Downloading joblib-1.2.0-py3-none-any.whl (297 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 298.0/298.0 KB 29.6 MB/s eta 0:00:00
+Requirement already satisfied: markdown>=2.6.8 in /home/app/.local/lib/python3.7/site-packages (from tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (3.4.3)
+Requirement already satisfied: google-auth-oauthlib<0.5,>=0.4.1 in /home/app/.local/lib/python3.7/site-packages (from tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (0.4.6)
+Requirement already satisfied: werkzeug>=1.0.1 in /usr/local/lib/python3.7/site-packages (from tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (2.2.3)
+Requirement already satisfied: tensorboard-data-server<0.7.0,>=0.6.0 in /home/app/.local/lib/python3.7/site-packages (from tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (0.6.1)
+Requirement already satisfied: tensorboard-plugin-wit>=1.6.0 in /home/app/.local/lib/python3.7/site-packages (from tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (1.8.1)
+Requirement already satisfied: importlib-metadata>=3.6 in /usr/local/lib/python3.7/site-packages (from typeguard>=2.7->tensorflow-addons->tf-models-official>=2.5.1->object-detection==0.1) (6.5.0)
+Collecting text-unidecode>=1.3
+  Downloading text_unidecode-1.3-py2.py3-none-any.whl (78 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.2/78.2 KB 14.5 MB/s eta 0:00:00
+Requirement already satisfied: requests-oauthlib>=0.7.0 in /home/app/.local/lib/python3.7/site-packages (from google-auth-oauthlib<0.5,>=0.4.1->tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (1.3.1)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /usr/local/lib/python3.7/site-packages (from werkzeug>=1.0.1->tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (2.1.2)
+Requirement already satisfied: oauthlib>=3.0.0 in /home/app/.local/lib/python3.7/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<0.5,>=0.4.1->tensorboard<2.12,>=2.11->tensorflow~=2.11.0->tf-models-official>=2.5.1->object-detection==0.1) (3.2.2)
+Building wheels for collected packages: object-detection, avro-python3, pycocotools, crcmod, dill, kaggle, seqeval, docopt, promise
+  Building wheel for object-detection (setup.py): started
+  Building wheel for object-detection (setup.py): finished with status 'done'
+  Created wheel for object-detection: filename=object_detection-0.1-py3-none-any.whl size=1697022 sha256=bbdf27646eb84429adb1f5c2c40f8b9d4b65b312a38cd65208f20710f749e017
+  Stored in directory: /tmp/pip-ephem-wheel-cache-tmjtkkxa/wheels/2f/09/05/5f1c8b079749bea4505b53f59e7d3c0e83d47b40952ad45dde
+  Building wheel for avro-python3 (setup.py): started
+  Building wheel for avro-python3 (setup.py): finished with status 'done'
+  Created wheel for avro-python3: filename=avro_python3-1.10.2-py3-none-any.whl size=44010 sha256=29f452649725f3552d271f25a71a4d7d4005686961b66e03e61a7ab89497ffaa
+  Stored in directory: /home/app/.cache/pip/wheels/d6/e5/b1/6b151d9b535ee50aaa6ab27d145a0104b6df02e5636f0376da
+  Building wheel for pycocotools (pyproject.toml): started
+  Building wheel for pycocotools (pyproject.toml): finished with status 'done'
+  Created wheel for pycocotools: filename=pycocotools-2.0.6-cp37-cp37m-linux_x86_64.whl size=372148 sha256=8d57124ee09818195229e09beb0b3fc70793002d306cfb1a23d8516504d20146
+  Stored in directory: /home/app/.cache/pip/wheels/06/f6/f9/9cc49c6de8e3cf27dfddd91bf46595a057141d4583a2adaf03
+  Building wheel for crcmod (setup.py): started
+  Building wheel for crcmod (setup.py): finished with status 'done'
+  Created wheel for crcmod: filename=crcmod-1.7-cp37-cp37m-linux_x86_64.whl size=30704 sha256=10a4521204db62090e09581a6b12e6ec2a8aef0518f5d5322e4aaec6a013ae52
+  Stored in directory: /home/app/.cache/pip/wheels/dc/9a/e9/49e627353476cec8484343c4ab656f1e0d783ee77b9dde2d1f
+  Building wheel for dill (setup.py): started
+  Building wheel for dill (setup.py): finished with status 'done'
+  Created wheel for dill: filename=dill-0.3.1.1-py3-none-any.whl size=78545 sha256=ec49420c622ac1dd0500a14c16848bf33f7d8aeee249ecc2576ac65a5027b994
+  Stored in directory: /home/app/.cache/pip/wheels/a4/61/fd/c57e374e580aa78a45ed78d5859b3a44436af17e22ca53284f
+  Building wheel for kaggle (setup.py): started
+  Building wheel for kaggle (setup.py): finished with status 'done'
+  Created wheel for kaggle: filename=kaggle-1.5.13-py3-none-any.whl size=77734 sha256=6c53e47751f797323bebde6383a709180ffbb88c6642beca64b9fd99721ae153
+  Stored in directory: /home/app/.cache/pip/wheels/fd/97/a6/3372cb23468915cbcf108338dd29c73379fd1a55828ec608ba
+  Building wheel for seqeval (setup.py): started
+  Building wheel for seqeval (setup.py): finished with status 'done'
+  Created wheel for seqeval: filename=seqeval-1.2.2-py3-none-any.whl size=16181 sha256=02a58acb355f451f0854161bb3b3d0bb3b13f67daeda1f8627f81cfe40e5000f
+  Stored in directory: /home/app/.cache/pip/wheels/05/96/ee/7cac4e74f3b19e3158dce26a20a1c86b3533c43ec72a549fd7
+  Building wheel for docopt (setup.py): started
+  Building wheel for docopt (setup.py): finished with status 'done'
+  Created wheel for docopt: filename=docopt-0.6.2-py2.py3-none-any.whl size=13723 sha256=c203834320eba1e43c8b3af4491d3a95e8a6de852ea07dc906927bbcc2f86a95
+  Stored in directory: /home/app/.cache/pip/wheels/72/b0/3f/1d95f96ff986c7dfffe46ce2be4062f38ebd04b506c77c81b9
+  Building wheel for promise (setup.py): started
+  Building wheel for promise (setup.py): finished with status 'done'
+  Created wheel for promise: filename=promise-2.3-py3-none-any.whl size=21501 sha256=f33cef1e1b00a2bd591f6c8989f5c479f55061c71454fc054c5662410b45ad61
+  Stored in directory: /home/app/.cache/pip/wheels/29/93/c6/762e359f8cb6a5b69c72235d798804cae523bbe41c2aa8333d
+Successfully built object-detection avro-python3 pycocotools crcmod dill kaggle seqeval docopt promise
+Installing collected packages: text-unidecode, sentencepiece, pytz, py-cpuinfo, gin-config, docopt, dm-tree, crcmod, zstandard, uritemplate, tqdm, toml, threadpoolctl, tf-slim, tensorflow-model-optimization, tensorflow_io, tensorflow-hub, tabulate, scipy, regex, pyyaml, python-slugify, python-dateutil, pyparsing, pymongo, pyarrow, psutil, proto-plus, promise, portalocker, orjson, opencv-python-headless, opencv-python, objsize, lxml, kiwisolver, joblib, importlib-resources, immutabledict, googleapis-common-protos, fonttools, fasteners, fastavro, etils, dill, Cython, cycler, contextlib2, colorama, cloudpickle, avro-python3, typeguard, tensorflow-metadata, scikit-learn, sacrebleu, pydot, pandas, matplotlib, kaggle, httplib2, hdfs, tensorflow-addons, seqeval, pycocotools, oauth2client, lvis, google-auth-httplib2, google-api-core, apache-beam, tensorflow-datasets, google-api-python-client, tensorflow-text, tf-models-official, object-detection
+Successfully installed Cython-0.29.35 apache-beam-2.46.0 avro-python3-1.10.2 cloudpickle-2.2.1 colorama-0.4.6 contextlib2-21.6.0 crcmod-1.7 cycler-0.11.0 dill-0.3.1.1 dm-tree-0.1.8 docopt-0.6.2 etils-0.9.0 fastavro-1.7.4 fasteners-0.18 fonttools-4.38.0 gin-config-0.5.0 google-api-core-2.11.0 google-api-python-client-2.88.0 google-auth-httplib2-0.1.0 googleapis-common-protos-1.59.0 hdfs-2.7.0 httplib2-0.21.0 immutabledict-2.2.4 importlib-resources-5.12.0 joblib-1.2.0 kaggle-1.5.13 kiwisolver-1.4.4 lvis-0.5.3 lxml-4.9.2 matplotlib-3.5.3 oauth2client-4.1.3 object-detection-0.1 objsize-0.6.1 opencv-python-4.7.0.72 opencv-python-headless-4.7.0.72 orjson-3.9.0 pandas-1.3.5 portalocker-2.7.0 promise-2.3 proto-plus-1.22.2 psutil-5.9.5 py-cpuinfo-9.0.0 pyarrow-9.0.0 pycocotools-2.0.6 pydot-1.4.2 pymongo-3.13.0 pyparsing-2.4.7 python-dateutil-2.8.2 python-slugify-8.0.1 pytz-2023.3 pyyaml-5.4.1 regex-2023.6.3 sacrebleu-2.2.0 scikit-learn-1.0.2 scipy-1.7.3 sentencepiece-0.1.99 seqeval-1.2.2 tabulate-0.9.0 tensorflow-addons-0.19.0 tensorflow-datasets-4.8.2 tensorflow-hub-0.13.0 tensorflow-metadata-1.12.0 tensorflow-model-optimization-0.7.3 tensorflow-text-2.11.0 tensorflow_io-0.32.0 text-unidecode-1.3 tf-models-official-2.11.6 tf-slim-1.1.0 threadpoolctl-3.1.0 toml-0.10.2 tqdm-4.65.0 typeguard-4.0.0 uritemplate-4.1.1 zstandard-0.21.0
+[91mWARNING: You are using pip version 22.0.4; however, version 23.1.2 is available.
+You should consider upgrading via the '/usr/local/bin/python -m pip install --upgrade pip' command.
+[0mRemoving intermediate container c952ee2356d7
+ ---> 5e847b451b47
+Step 26/36 : USER root
+ ---> Running in 3d585d34f6ef
+Removing intermediate container 3d585d34f6ef
+ ---> deba03cf2be6
+Step 27/36 : FROM build as test
+ ---> deba03cf2be6
+Step 28/36 : FROM build as ship
+ ---> deba03cf2be6
+Step 29/36 : WORKDIR /home/app/
+ ---> Running in 59136831aa1e
+Removing intermediate container 59136831aa1e
+ ---> fc5885c09ad2
+Step 30/36 : USER app
+ ---> Running in f8901caa91b8
+Removing intermediate container f8901caa91b8
+ ---> d16675da8e50
+Step 31/36 : ENV fprocess="python index.py"
+ ---> Running in 12ce4c5bc8e2
+Removing intermediate container 12ce4c5bc8e2
+ ---> f395cc1efb89
+Step 32/36 : ENV cgi_headers="true"
+ ---> Running in 27ca6a4bfc33
+Removing intermediate container 27ca6a4bfc33
+ ---> 48428789d531
+Step 33/36 : ENV mode="http"
+ ---> Running in 9afaa56bd30f
+Removing intermediate container 9afaa56bd30f
+ ---> 20674673c001
+Step 34/36 : ENV upstream_url="http://127.0.0.1:5000"
+ ---> Running in 59052b89695d
+Removing intermediate container 59052b89695d
+ ---> 57a40bcb127f
+Step 35/36 : HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
+ ---> Running in 4456f0c7c2d0
+Removing intermediate container 4456f0c7c2d0
+ ---> e261414bf046
+Step 36/36 : CMD ["fwatchdog"]
+ ---> Running in 3fbd3c5cdfba
+Removing intermediate container 3fbd3c5cdfba
+ ---> 9934cc4cb05c
+Successfully built 9934cc4cb05c
+Successfully tagged lolopop/service:1
+Image: lolopop/service:1 built.
+[33m[0] < Building service-1-0 done in 665.87s.
+[0m[33m[0] Worker done.
+[0m
+[33mTotal build time: 665.87s[0m
+
+[33m[0] > Pushing service-1-0 [lolopop/service:1]
+[0mThe push refers to repository [docker.io/lolopop/service]
+0b34484d7031: Preparing
+07e694246f3f: Preparing
+26eed0c3f746: Preparing
+d92e9ad59ddd: Preparing
+85aa56c87f63: Preparing
+aad3a2729ef6: Preparing
+de65e22bcb1c: Preparing
+84d80d00eff1: Preparing
+cffed463c8d6: Preparing
+83f217a1fb8b: Preparing
+68b3e66f5240: Preparing
+dfca3df312b2: Preparing
+2649ad4cfcad: Preparing
+2649ad4cfcad: Preparing
+063d47f8faa1: Preparing
+85aa56c87f63: Waiting
+02a788988127: Preparing
+90dd70c2e6bd: Preparing
+26eed0c3f746: Waiting
+807e5e673844: Preparing
+d92e9ad59ddd: Waiting
+cfd0811d364e: Preparing
+84d80d00eff1: Waiting
+b86f260e173a: Preparing
+6a1ebb98b0dc: Preparing
+24b48387f467: Preparing
+de65e22bcb1c: Waiting
+0b34484d7031: Waiting
+063d47f8faa1: Waiting
+ae56c0c5405b: Preparing
+02a788988127: Waiting
+cffed463c8d6: Waiting
+90dd70c2e6bd: Waiting
+83f217a1fb8b: Waiting
+807e5e673844: Waiting
+68b3e66f5240: Waiting
+6a1ebb98b0dc: Waiting
+dfca3df312b2: Waiting
+cfd0811d364e: Waiting
+aad3a2729ef6: Waiting
+b86f260e173a: Waiting
+ae56c0c5405b: Waiting
+2649ad4cfcad: Waiting
+26eed0c3f746: Layer already exists
+d92e9ad59ddd: Layer already exists
+85aa56c87f63: Layer already exists
+aad3a2729ef6: Layer already exists
+de65e22bcb1c: Layer already exists
+84d80d00eff1: Layer already exists
+cffed463c8d6: Layer already exists
+83f217a1fb8b: Layer already exists
+68b3e66f5240: Layer already exists
+dfca3df312b2: Layer already exists
+2649ad4cfcad: Layer already exists
+063d47f8faa1: Layer already exists
+02a788988127: Layer already exists
+90dd70c2e6bd: Layer already exists
+807e5e673844: Layer already exists
+cfd0811d364e: Layer already exists
+b86f260e173a: Layer already exists
+6a1ebb98b0dc: Layer already exists
+24b48387f467: Layer already exists
+ae56c0c5405b: Layer already exists
+07e694246f3f: Pushed
+0b34484d7031: Pushed
+1: digest: sha256:1e814acb8f8c334d2fb104405d338debbccf03c79a9e73fb2987ebe47aa2d379 size: 5148
+[33m[0] < Pushing service-1-0 [lolopop/service:1] done.
+[0m[33m[0] Worker done.
+[0m
+Deploying: service-1-0.
+
+Deployed. 202 Accepted.
+URL: http://127.0.0.1:8080/function/service-1-0
+

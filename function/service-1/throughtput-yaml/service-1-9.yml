@@ -1,0 +1,21 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  service-1-9:
+    lang: python3-http-debian
+    handler: ./service
+    image: lolopop/service:1
+    imagePullPolicy: IfNotPresent
+    limits: 
+      cpu: 8
+      memory: 4096Mi
+    requests:
+      cpu: 8
+      memory: 4096Mi
+    environment:
+      BATCH_SIZE: "8"
+      R_SIZE: "600"
+      C_SIZE: "600"
+      MODEL_NAME: "ssdlite_mobilenet_v2_coco_2018_05_09"

@@ -81,8 +81,8 @@ func main() {
 		1: 120,
 		2: 30,
 		3: 100,
-		4: 100,
-		5: 100,
+		4: 30,
+		5: 30,
 	}
 	var wg sync.WaitGroup
 	index := 0

@@ -1,0 +1,21 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  service-2-13:
+    lang: python3-http-debian
+    handler: ./service
+    image: lolopop/service:2
+    imagePullPolicy: IfNotPresent
+    limits: 
+      cpu: 4
+      memory: 6144Mi
+    requests:
+      cpu: 4
+      memory: 6144Mi
+    environment:
+      BATCH_SIZE: "6"
+      R_SIZE: "600"
+      C_SIZE: "600"
+      MODEL_NAME: "ssd_inception_v2_coco_2018_01_28"

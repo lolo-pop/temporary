@@ -1,0 +1,21 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  service-0-0:
+    lang: python3-http-debian
+    handler: ./service
+    image: lolopop/service:0
+    imagePullPolicy: IfNotPresent
+    limits: 
+      cpu: 2
+      memory: 4096Mi
+    requests:
+      cpu: 2
+      memory: 4096Mi
+    environment:
+      BATCH_SIZE: "2"
+      R_SIZE: "600"
+      C_SIZE: "600"
+      MODEL_NAME: "ssd_mobilenet_v1_0.75_depth_300x300_coco14_sync_2018_07_03"

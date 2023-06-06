@@ -1,0 +1,21 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  service-4-4:
+    lang: python3-http-debian
+    handler: ./service
+    image: lolopop/service:4
+    imagePullPolicy: IfNotPresent
+    limits: 
+      cpu: 8
+      memory: 8Gi
+    requests:
+      cpu: 8
+      memory: 8Gi
+    environment:
+      BATCH_SIZE: "6"
+      R_SIZE: "600"
+      C_SIZE: "600"
+      MODEL_NAME: "rfcn_resnet101_coco_2018_01_28"
