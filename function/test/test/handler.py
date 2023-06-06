@@ -85,6 +85,7 @@ def handle(event, context):
     t1 = time.time()
     # req_data = base64.b64decode(req.encode('utf-8'))
     # image_stream = io.BytesIO(req_data)
+    """
     image_stream = "/home/app/function/inception.png"
     img = Image.open(image_stream)
     img = img.convert('RGB')
@@ -93,14 +94,16 @@ def handle(event, context):
     data = "image1.jpg"
     resized_img.save(data)
     t3 = time.time()
+    """
     # sender(1, 1)
     t4 = time.time()
+    data = "image1.jpg"
     uuid_name = uuid.uuid1()
     name = str(uuid_name)
     ip = get_container_ip()
     send_image(name, ip, data)
     t5 = time.time()
-    json_data = f"resize time: {t2 - t1}\nsave image time:{t3-t2}\nsend image time:{t5-t4}\ntotal time:{t5-t1}\ninit time:{end-start}"
+    json_data = f"send image time:{t5-t4}\ntotal time:{t5-t1}\ninit time:{end-start}"
     return {
         "statusCode": 200,
         "body": json_data

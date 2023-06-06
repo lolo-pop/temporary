@@ -79,7 +79,7 @@ func test(level int) {
 	}
 	fmt.Println("Response Body:", string(body))
 	if resp.StatusCode == 200 {
-		file, err := os.OpenFile(fmt.Sprintf("data-%d.csv", level), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(fmt.Sprintf("evaluation/app-%d.csv", level), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			panic(err)
 		}
@@ -95,7 +95,7 @@ func test(level int) {
 			panic(err)
 		}
 	} else {
-		file, err := os.OpenFile(fmt.Sprintf("data-%d.csv", level), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(fmt.Sprintf("evaluation/app-%d.csv", level), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			panic(err)
 		}

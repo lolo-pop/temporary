@@ -14,10 +14,10 @@ functions:
       com.openfaas.scale.max: "5"
       com.openfaas.scale.factor: "2"
     limits: 
-      cpu: 1000m
+      cpu: 500m
       memory: 256Mi
     requests: 
-      cpu: 1000m
+      cpu: 500m
       memory: 256Mi  
     environment:
       R_SIZE: 600
